@@ -16,6 +16,7 @@
 		9A0C21C425366C75E395D8F0 /* ExchangeRateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8A890A1B3AEF2945BB7C699 /* ExchangeRateService.swift */; };
 		9C54231885AAB4599FC361F0 /* ExchangeRateWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 851B2D3FF9414E171F45820A /* ExchangeRateWidget.swift */; };
 		B5EE77A29A60495221EDEA6F /* ExchangeRateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8A890A1B3AEF2945BB7C699 /* ExchangeRateService.swift */; };
+		B8746C794D89477BEC7ADC2F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0248A5E5E0979EEF53871C85 /* Assets.xcassets */; };
 		D85CF44EAEBB03EC82977211 /* ExchangeRateApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B1DF8535326933DB7FF85C8 /* ExchangeRateApp.swift */; };
 		D91DC6CFDA73A359DAC41AAF /* RateDataPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABE3456B77F3197BF4C74A21 /* RateDataPoint.swift */; };
 		E2B0263AF206A6D6A6BEBBB4 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 763FDFB57219D5CC23DC7183 /* Config.swift */; };
@@ -48,6 +49,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0248A5E5E0979EEF53871C85 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1B1DF8535326933DB7FF85C8 /* ExchangeRateApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExchangeRateApp.swift; sourceTree = "<group>"; };
 		368FB9B4DF36F371E5364E40 /* ExchangeRate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExchangeRate.swift; sourceTree = "<group>"; };
 		3ED3E01CED085B38F66E964D /* ExchangeRateApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ExchangeRateApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -113,6 +115,7 @@
 		BFE180E0901CD6340D074372 /* ExchangeRateApp */ = {
 			isa = PBXGroup;
 			children = (
+				0248A5E5E0979EEF53871C85 /* Assets.xcassets */,
 				BDB0E7CC58ACF8A131F51C43 /* ContentView.swift */,
 				7F03BEF27119A5E3D27416EB /* ExchangeRateApp.entitlements */,
 				1B1DF8535326933DB7FF85C8 /* ExchangeRateApp.swift */,
@@ -129,6 +132,7 @@
 			buildConfigurationList = D21CA1162E0CD99D16349D3B /* Build configuration list for PBXNativeTarget "ExchangeRateApp" */;
 			buildPhases = (
 				1AF915CBE86327761C2CFC01 /* Sources */,
+				CB0BD8725A892100C225A6D9 /* Resources */,
 				A93967E83297A33FA4728875 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
@@ -196,6 +200,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		CB0BD8725A892100C225A6D9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B8746C794D89477BEC7ADC2F /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		1AF915CBE86327761C2CFC01 /* Sources */ = {

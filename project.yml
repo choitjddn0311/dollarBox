@@ -26,6 +26,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.dollarbox.ExchangeRateApp
         PRODUCT_NAME: dollarBox
         INFOPLIST_FILE: ExchangeRateApp/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     entitlements:
       path: ExchangeRateApp/ExchangeRateApp.entitlements
       properties:
