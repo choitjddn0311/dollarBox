@@ -1,0 +1,54 @@
+name: ExchangeRateWidget
+options:
+  bundleIdPrefix: com.dollarbox
+  deploymentTarget:
+    macOS: "14.0"
+  xcodeVersion: "15.0"
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    CODE_SIGN_STYLE: Automatic
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+
+targets:
+  ExchangeRateApp:
+    type: application
+    platform: macOS
+    deploymentTarget: "14.0"
+    sources:
+      - path: ExchangeRateApp
+      - path: Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.dollarbox.ExchangeRateApp
+        PRODUCT_NAME: dollarBox
+        INFOPLIST_FILE: ExchangeRateApp/Info.plist
+    entitlements:
+      path: ExchangeRateApp/ExchangeRateApp.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.network.client: true
+    dependencies:
+      - target: ExchangeRateWidgetExtension
+        embed: true
+
+  ExchangeRateWidgetExtension:
+    type: app-extension
+    platform: macOS
+    deploymentTarget: "14.0"
+    sources:
+      - path: ExchangeRateWidgetExtension
+      - path: Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.dollarbox.ExchangeRateApp.ExchangeRateWidgetExtension
+        INFOPLIST_FILE: ExchangeRateWidgetExtension/Info.plist
+        SKIP_INSTALL: YES
+    entitlements:
+      path: ExchangeRateWidgetExtension/ExchangeRateWidgetExtension.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.network.client: true

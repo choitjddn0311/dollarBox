@@ -1,0 +1,469 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1515D17A43B6862CA1A4CC15 /* ExchangeRate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 368FB9B4DF36F371E5364E40 /* ExchangeRate.swift */; };
+		22ABF8E97A799154DDAC46B8 /* ExchangeRate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 368FB9B4DF36F371E5364E40 /* ExchangeRate.swift */; };
+		32878186D5707171FDC24C45 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 763FDFB57219D5CC23DC7183 /* Config.swift */; };
+		704588F2088033BA0C46F491 /* ExchangeRateProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = C407D12B0A990821A4498707 /* ExchangeRateProvider.swift */; };
+		77C674146FF29311DBC219DA /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDB0E7CC58ACF8A131F51C43 /* ContentView.swift */; };
+		9410533B003802D5883C55A5 /* RateDataPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABE3456B77F3197BF4C74A21 /* RateDataPoint.swift */; };
+		9A0C21C425366C75E395D8F0 /* ExchangeRateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8A890A1B3AEF2945BB7C699 /* ExchangeRateService.swift */; };
+		9C54231885AAB4599FC361F0 /* ExchangeRateWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 851B2D3FF9414E171F45820A /* ExchangeRateWidget.swift */; };
+		B5EE77A29A60495221EDEA6F /* ExchangeRateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8A890A1B3AEF2945BB7C699 /* ExchangeRateService.swift */; };
+		D85CF44EAEBB03EC82977211 /* ExchangeRateApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B1DF8535326933DB7FF85C8 /* ExchangeRateApp.swift */; };
+		D91DC6CFDA73A359DAC41AAF /* RateDataPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABE3456B77F3197BF4C74A21 /* RateDataPoint.swift */; };
+		E2B0263AF206A6D6A6BEBBB4 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 763FDFB57219D5CC23DC7183 /* Config.swift */; };
+		E9B1D9EAC873A0DBFBBFB5F8 /* ExchangeRateWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E84C38DAF99061423D13BE4 /* ExchangeRateWidgetView.swift */; };
+		EB2C5ADE6DF196F5920AF0FF /* ExchangeRateWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 6DE4061FAAB4C8B91CEB900C /* ExchangeRateWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		E240DAFF684A196895AA2CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D49313F0A5CDC3203B6A93C8 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FBA58711298E4E37B17290B0;
+			remoteInfo = ExchangeRateWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		A93967E83297A33FA4728875 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				EB2C5ADE6DF196F5920AF0FF /* ExchangeRateWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		1B1DF8535326933DB7FF85C8 /* ExchangeRateApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExchangeRateApp.swift; sourceTree = "<group>"; };
+		368FB9B4DF36F371E5364E40 /* ExchangeRate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExchangeRate.swift; sourceTree = "<group>"; };
+		3ED3E01CED085B38F66E964D /* ExchangeRateApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ExchangeRateApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		56504E5B8B97FCBEFB32E1BD /* .env */ = {isa = PBXFileReference; path = .env; sourceTree = "<group>"; };
+		578891CC4C97E3210A31B67F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		6DE4061FAAB4C8B91CEB900C /* ExchangeRateWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ExchangeRateWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		763FDFB57219D5CC23DC7183 /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
+		79F1582A213FA79D3C1C17B7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		7F03BEF27119A5E3D27416EB /* ExchangeRateApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ExchangeRateApp.entitlements; sourceTree = "<group>"; };
+		851B2D3FF9414E171F45820A /* ExchangeRateWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExchangeRateWidget.swift; sourceTree = "<group>"; };
+		9E84C38DAF99061423D13BE4 /* ExchangeRateWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExchangeRateWidgetView.swift; sourceTree = "<group>"; };
+		ABE3456B77F3197BF4C74A21 /* RateDataPoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RateDataPoint.swift; sourceTree = "<group>"; };
+		BDB0E7CC58ACF8A131F51C43 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		C407D12B0A990821A4498707 /* ExchangeRateProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExchangeRateProvider.swift; sourceTree = "<group>"; };
+		D8A890A1B3AEF2945BB7C699 /* ExchangeRateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExchangeRateService.swift; sourceTree = "<group>"; };
+		FAD7879067F2615C5FE0B554 /* ExchangeRateWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ExchangeRateWidgetExtension.entitlements; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		022D96581AEBC35C6C47AAAB /* ExchangeRateWidgetExtension */ = {
+			isa = PBXGroup;
+			children = (
+				C407D12B0A990821A4498707 /* ExchangeRateProvider.swift */,
+				851B2D3FF9414E171F45820A /* ExchangeRateWidget.swift */,
+				FAD7879067F2615C5FE0B554 /* ExchangeRateWidgetExtension.entitlements */,
+				9E84C38DAF99061423D13BE4 /* ExchangeRateWidgetView.swift */,
+				79F1582A213FA79D3C1C17B7 /* Info.plist */,
+			);
+			path = ExchangeRateWidgetExtension;
+			sourceTree = "<group>";
+		};
+		305984BDBF2DCF5E38579590 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				56504E5B8B97FCBEFB32E1BD /* .env */,
+				763FDFB57219D5CC23DC7183 /* Config.swift */,
+				368FB9B4DF36F371E5364E40 /* ExchangeRate.swift */,
+				D8A890A1B3AEF2945BB7C699 /* ExchangeRateService.swift */,
+				ABE3456B77F3197BF4C74A21 /* RateDataPoint.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		64D40AD4A9A16B1D9717B3B4 = {
+			isa = PBXGroup;
+			children = (
+				BFE180E0901CD6340D074372 /* ExchangeRateApp */,
+				022D96581AEBC35C6C47AAAB /* ExchangeRateWidgetExtension */,
+				305984BDBF2DCF5E38579590 /* Shared */,
+				99F8970C34CDAF2276344DB0 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		99F8970C34CDAF2276344DB0 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				3ED3E01CED085B38F66E964D /* ExchangeRateApp.app */,
+				6DE4061FAAB4C8B91CEB900C /* ExchangeRateWidgetExtension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		BFE180E0901CD6340D074372 /* ExchangeRateApp */ = {
+			isa = PBXGroup;
+			children = (
+				BDB0E7CC58ACF8A131F51C43 /* ContentView.swift */,
+				7F03BEF27119A5E3D27416EB /* ExchangeRateApp.entitlements */,
+				1B1DF8535326933DB7FF85C8 /* ExchangeRateApp.swift */,
+				578891CC4C97E3210A31B67F /* Info.plist */,
+			);
+			path = ExchangeRateApp;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		F88661AB631AFBF7630B6B8B /* ExchangeRateApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D21CA1162E0CD99D16349D3B /* Build configuration list for PBXNativeTarget "ExchangeRateApp" */;
+			buildPhases = (
+				1AF915CBE86327761C2CFC01 /* Sources */,
+				A93967E83297A33FA4728875 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				1D533EED33F423D38976E393 /* PBXTargetDependency */,
+			);
+			name = ExchangeRateApp;
+			packageProductDependencies = (
+			);
+			productName = ExchangeRateApp;
+			productReference = 3ED3E01CED085B38F66E964D /* ExchangeRateApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+		FBA58711298E4E37B17290B0 /* ExchangeRateWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FB1A40A317EA986C872DC61E /* Build configuration list for PBXNativeTarget "ExchangeRateWidgetExtension" */;
+			buildPhases = (
+				8920202422FEB1B1B29B03D6 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ExchangeRateWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = ExchangeRateWidgetExtension;
+			productReference = 6DE4061FAAB4C8B91CEB900C /* ExchangeRateWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D49313F0A5CDC3203B6A93C8 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					F88661AB631AFBF7630B6B8B = {
+						ProvisioningStyle = Automatic;
+					};
+					FBA58711298E4E37B17290B0 = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = F38940A31D1A0E3D05A8D73D /* Build configuration list for PBXProject "ExchangeRateWidget" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 64D40AD4A9A16B1D9717B3B4;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 99F8970C34CDAF2276344DB0 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				F88661AB631AFBF7630B6B8B /* ExchangeRateApp */,
+				FBA58711298E4E37B17290B0 /* ExchangeRateWidgetExtension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		1AF915CBE86327761C2CFC01 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E2B0263AF206A6D6A6BEBBB4 /* Config.swift in Sources */,
+				77C674146FF29311DBC219DA /* ContentView.swift in Sources */,
+				22ABF8E97A799154DDAC46B8 /* ExchangeRate.swift in Sources */,
+				D85CF44EAEBB03EC82977211 /* ExchangeRateApp.swift in Sources */,
+				B5EE77A29A60495221EDEA6F /* ExchangeRateService.swift in Sources */,
+				D91DC6CFDA73A359DAC41AAF /* RateDataPoint.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8920202422FEB1B1B29B03D6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				32878186D5707171FDC24C45 /* Config.swift in Sources */,
+				1515D17A43B6862CA1A4CC15 /* ExchangeRate.swift in Sources */,
+				704588F2088033BA0C46F491 /* ExchangeRateProvider.swift in Sources */,
+				9A0C21C425366C75E395D8F0 /* ExchangeRateService.swift in Sources */,
+				9C54231885AAB4599FC361F0 /* ExchangeRateWidget.swift in Sources */,
+				E9B1D9EAC873A0DBFBBFB5F8 /* ExchangeRateWidgetView.swift in Sources */,
+				9410533B003802D5883C55A5 /* RateDataPoint.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		1D533EED33F423D38976E393 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FBA58711298E4E37B17290B0 /* ExchangeRateWidgetExtension */;
+			targetProxy = E240DAFF684A196895AA2CDF /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		03523051F4949F2D818810B3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = ExchangeRateWidgetExtension/ExchangeRateWidgetExtension.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = ExchangeRateWidgetExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dollarbox.ExchangeRateApp.ExchangeRateWidgetExtension;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		27EDEF2C0029EB238567F1FD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		3D7738843C2D1B30D260C3C6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		5BC1118043E33329DB8A2B1C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = ExchangeRateApp/ExchangeRateApp.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = ExchangeRateApp/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dollarbox.ExchangeRateApp;
+				PRODUCT_NAME = dollarBox;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		A5384ECC44B0B20C882372E0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = ExchangeRateApp/ExchangeRateApp.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = ExchangeRateApp/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dollarbox.ExchangeRateApp;
+				PRODUCT_NAME = dollarBox;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		B8F692CCE4D0E80C4E8A7BA9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = ExchangeRateWidgetExtension/ExchangeRateWidgetExtension.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = ExchangeRateWidgetExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dollarbox.ExchangeRateApp.ExchangeRateWidgetExtension;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		D21CA1162E0CD99D16349D3B /* Build configuration list for PBXNativeTarget "ExchangeRateApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A5384ECC44B0B20C882372E0 /* Debug */,
+				5BC1118043E33329DB8A2B1C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		F38940A31D1A0E3D05A8D73D /* Build configuration list for PBXProject "ExchangeRateWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3D7738843C2D1B30D260C3C6 /* Debug */,
+				27EDEF2C0029EB238567F1FD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		FB1A40A317EA986C872DC61E /* Build configuration list for PBXNativeTarget "ExchangeRateWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				03523051F4949F2D818810B3 /* Debug */,
+				B8F692CCE4D0E80C4E8A7BA9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D49313F0A5CDC3203B6A93C8 /* Project object */;
+}
