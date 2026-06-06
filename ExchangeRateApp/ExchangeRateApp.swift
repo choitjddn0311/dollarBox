@@ -6,6 +6,6 @@ struct ExchangeRateApp: App {
         WindowGroup {
             ContentView()
         }
-        .defaultSize(width: 400, height: 240)
+        .defaultSize(width: 720, height: 560)
     }
 }

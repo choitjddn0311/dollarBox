@@ -47,56 +47,72 @@ struct ContentView: View {
         }
     }
 
-    // 드래그 중일 때 헤더에 표시할 환율
-    private var displayedRate: Double? {
-        selectedPoint?.rate ?? exchangeRate?.rate
-    }
-    private var displayedDate: Date? {
-        selectedPoint?.date ?? exchangeRate?.updatedAt
-    }
-    private var isDragging: Bool { selectedPoint != nil }
+    private var displayedRate: Double? { selectedPoint?.rate ?? exchangeRate?.rate }
+    private var displayedDate: Date?   { selectedPoint?.date ?? exchangeRate?.updatedAt }
+    private var isDragging: Bool       { selectedPoint != nil }
+
+    // MARK: - Body
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            header
-            periodPicker
-            chartArea
+        ZStack {
+            backgroundGradient
+            VStack(spacing: 14) {
+                ratePanel
+                chartPanel
+            }
+            .padding(20)
         }
-        .padding(28)
-        .frame(minWidth: 660, minHeight: 480)
+        .frame(minWidth: 700, minHeight: 540)
         .preferredColorScheme(preferredScheme)
         .task { await loadAll() }
     }
 
-    // MARK: - Header
+    // MARK: - Background
 
-    private var header: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 4) {
+    private var backgroundGradient: some View {
+        LinearGradient(
+            colors: [
+                Color(red: 0.04, green: 0.10, blue: 0.26),
+                Color(red: 0.10, green: 0.04, blue: 0.24)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+        .ignoresSafeArea()
+    }
+
+    // MARK: - Rate Panel
+
+    private var ratePanel: some View {
+        HStack(alignment: .top, spacing: 0) {
+            VStack(alignment: .leading, spacing: 6) {
                 Text("USD / KRW")
-                    .font(.subheadline)
+                    .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.secondary)
 
                 ZStack(alignment: .leading) {
                     if isLoadingRate {
-                        ProgressView().scaleEffect(0.9)
+                        ProgressView()
+                            .scaleEffect(1.1)
+                            .frame(height: 66)
                     } else {
                         Text(displayedRate.map {
                             $0.formatted(.number.precision(.fractionLength(2)))
                         } ?? "--")
-                        .font(.system(size: 44, weight: .bold, design: .rounded))
+                        .font(.system(size: 52, weight: .bold, design: .rounded))
                         .contentTransition(.numericText())
-                        .foregroundStyle(isDragging ? .primary : .primary)
+                        .foregroundStyle(isDragging ? Color.accentColor : .primary)
+                        .animation(.easeInOut(duration: 0.15), value: isDragging)
                     }
                 }
-                .frame(height: 54)
+                .frame(height: 66)
 
                 if let date = displayedDate {
                     Text(isDragging
                          ? date.formatted(date: .abbreviated, time: .omitted)
                          : "Updated \(date.formatted(date: .omitted, time: .shortened))"
                     )
-                    .font(.caption)
+                    .font(.subheadline)
                     .foregroundStyle(isDragging ? Color.accentColor : .secondary)
                     .animation(.easeInOut(duration: 0.15), value: isDragging)
                 }
@@ -104,7 +120,7 @@ struct ContentView: View {
 
             Spacer()
 
-            HStack(spacing: 8) {
+            HStack(spacing: 10) {
                 Menu {
                     Button { themeMode = "light" } label: {
                         Label("라이트", systemImage: "sun.max")
@@ -117,14 +133,18 @@ struct ContentView: View {
                     }
                 } label: {
                     Image(systemName: themeIcon)
+                        .font(.system(size: 15, weight: .medium))
+                        .frame(width: 38, height: 38)
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.large)
+                .buttonStyle(.plain)
+                .glassEffect(in: Circle())
 
                 Button {
                     Task { await loadAll(force: true) }
                 } label: {
                     Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 15, weight: .medium))
+                        .frame(width: 38, height: 38)
                         .rotationEffect(isLoadingRate || isLoadingChart ? .degrees(360) : .zero)
                         .animation(
                             isLoadingRate || isLoadingChart
@@ -133,11 +153,27 @@ struct ContentView: View {
                             value: isLoadingRate || isLoadingChart
                         )
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.large)
+                .buttonStyle(.plain)
+                .glassEffect(in: Circle())
                 .disabled(isLoadingRate || isLoadingChart)
             }
         }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 20)
+        .glassEffect(in: RoundedRectangle(cornerRadius: 24))
+    }
+
+    // MARK: - Chart Panel
+
+    private var chartPanel: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            periodPicker
+            chartArea
+        }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .glassEffect(in: RoundedRectangle(cornerRadius: 24))
     }
 
     // MARK: - Period Picker
@@ -149,7 +185,7 @@ struct ContentView: View {
             }
         }
         .pickerStyle(.segmented)
-        .frame(maxWidth: 260)
+        .frame(maxWidth: 240)
         .onChange(of: selectedPeriod) { _, _ in
             selectedPoint = nil
             Task { await loadHistory() }
@@ -169,7 +205,6 @@ struct ContentView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             Chart {
-                // Gradient fill
                 ForEach(history) { point in
                     AreaMark(
                         x: .value("Date", point.date),
@@ -178,25 +213,23 @@ struct ContentView: View {
                     )
                     .foregroundStyle(
                         LinearGradient(
-                            colors: [Color.accentColor.opacity(0.2), .clear],
+                            colors: [Color.accentColor.opacity(0.25), .clear],
                             startPoint: .top, endPoint: .bottom
                         )
                     )
                     .interpolationMethod(.monotone)
                 }
 
-                // Line
                 ForEach(history) { point in
                     LineMark(
                         x: .value("Date", point.date),
                         y: .value("Rate", point.rate)
                     )
                     .foregroundStyle(Color.accentColor)
-                    .lineStyle(StrokeStyle(lineWidth: 2))
+                    .lineStyle(StrokeStyle(lineWidth: 2.5))
                     .interpolationMethod(.monotone)
                 }
 
-                // Min / Max (드래그 중에는 숨김)
                 if !isDragging {
                     if let min = minPoint {
                         PointMark(x: .value("Date", min.date), y: .value("Rate", min.rate))
@@ -216,7 +249,6 @@ struct ContentView: View {
                     }
                 }
 
-                // 드래그 선택 표시
                 if let selected = selectedPoint {
                     RuleMark(x: .value("Date", selected.date))
                         .foregroundStyle(Color.secondary.opacity(0.4))
@@ -230,7 +262,7 @@ struct ContentView: View {
             .chartYScale(domain: yDomain)
             .chartXAxis {
                 AxisMarks(values: .automatic(desiredCount: 5)) { _ in
-                    AxisGridLine().foregroundStyle(Color.secondary.opacity(0.2))
+                    AxisGridLine().foregroundStyle(Color.white.opacity(0.1))
                     AxisValueLabel(format: xAxisFormat)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
@@ -238,7 +270,7 @@ struct ContentView: View {
             }
             .chartYAxis {
                 AxisMarks(position: .leading, values: .automatic(desiredCount: 4)) { value in
-                    AxisGridLine().foregroundStyle(Color.secondary.opacity(0.2))
+                    AxisGridLine().foregroundStyle(Color.white.opacity(0.1))
                     AxisValueLabel {
                         if let v = value.as(Double.self) {
                             Text(v, format: .number.precision(.fractionLength(0)))
@@ -294,9 +326,9 @@ struct ContentView: View {
                 .font(.caption2.bold())
                 .foregroundStyle(color)
         }
-        .padding(.horizontal, 6)
-        .padding(.vertical, 3)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 4))
+        .padding(.horizontal, 7)
+        .padding(.vertical, 4)
+        .glassEffect(in: RoundedRectangle(cornerRadius: 6))
     }
 
     // MARK: - Data Loading
