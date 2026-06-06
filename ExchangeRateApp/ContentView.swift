@@ -2,6 +2,9 @@ import SwiftUI
 import Charts
 import WidgetKit
 
+private enum AppTab { case chart, converter }
+private enum ConverterFocus: Hashable { case usd, krw }
+
 struct ContentView: View {
     @AppStorage("themeMode") private var themeMode: String = "system"
 
@@ -11,6 +14,12 @@ struct ContentView: View {
     @State private var isLoadingRate = false
     @State private var isLoadingChart = false
     @State private var selectedPoint: RateDataPoint? = nil
+
+    // 환산 탭
+    @State private var activeTab: AppTab = .chart
+    @State private var usdText: String = ""
+    @State private var krwText: String = ""
+    @FocusState private var converterFocus: ConverterFocus?
 
     private var preferredScheme: ColorScheme? {
         switch themeMode {
@@ -58,7 +67,7 @@ struct ContentView: View {
             backgroundGradient
             VStack(spacing: 14) {
                 ratePanel
-                chartPanel
+                bottomPanel
             }
             .padding(20)
         }
@@ -70,15 +79,8 @@ struct ContentView: View {
     // MARK: - Background
 
     private var backgroundGradient: some View {
-        LinearGradient(
-            colors: [
-                Color(red: 0.04, green: 0.10, blue: 0.26),
-                Color(red: 0.10, green: 0.04, blue: 0.24)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-        .ignoresSafeArea()
+        Color(.windowBackgroundColor)
+            .ignoresSafeArea()
     }
 
     // MARK: - Rate Panel
@@ -96,12 +98,17 @@ struct ContentView: View {
                             .scaleEffect(1.1)
                             .frame(height: 66)
                     } else {
-                        Text(displayedRate.map {
-                            $0.formatted(.number.precision(.fractionLength(2)))
-                        } ?? "--")
-                        .font(.system(size: 52, weight: .bold, design: .rounded))
-                        .contentTransition(.numericText())
-                        .foregroundStyle(isDragging ? Color.accentColor : .primary)
+                        HStack(alignment: .firstTextBaseline, spacing: 4) {
+                            Text("₩")
+                                .font(.system(size: 28, weight: .semibold, design: .rounded))
+                                .foregroundStyle(.secondary)
+                            Text(displayedRate.map {
+                                $0.formatted(.number.precision(.fractionLength(2)))
+                            } ?? "--")
+                            .font(.system(size: 52, weight: .bold, design: .rounded))
+                            .contentTransition(.numericText())
+                        }
+                        .foregroundStyle(.primary)
                         .animation(.easeInOut(duration: 0.15), value: isDragging)
                     }
                 }
@@ -113,7 +120,7 @@ struct ContentView: View {
                          : "Updated \(date.formatted(date: .omitted, time: .shortened))"
                     )
                     .font(.subheadline)
-                    .foregroundStyle(isDragging ? Color.accentColor : .secondary)
+                    .foregroundStyle(.secondary)
                     .animation(.easeInOut(duration: 0.15), value: isDragging)
                 }
             }
@@ -163,12 +170,30 @@ struct ContentView: View {
         .glassEffect(in: RoundedRectangle(cornerRadius: 24))
     }
 
-    // MARK: - Chart Panel
+    // MARK: - Bottom Panel (Chart + Converter 탭)
 
-    private var chartPanel: some View {
+    private var bottomPanel: some View {
         VStack(alignment: .leading, spacing: 14) {
-            periodPicker
-            chartArea
+            HStack {
+                Picker("", selection: $activeTab) {
+                    Text("차트").tag(AppTab.chart)
+                    Text("환산").tag(AppTab.converter)
+                }
+                .pickerStyle(.segmented)
+                .frame(width: 160)
+
+                Spacer()
+
+                if activeTab == .chart {
+                    periodPicker
+                }
+            }
+
+            if activeTab == .chart {
+                chartArea
+            } else {
+                converterArea
+            }
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 20)
@@ -185,11 +210,104 @@ struct ContentView: View {
             }
         }
         .pickerStyle(.segmented)
-        .frame(maxWidth: 240)
+        .frame(maxWidth: 200)
         .onChange(of: selectedPeriod) { _, _ in
             selectedPoint = nil
             Task { await loadHistory() }
         }
+    }
+
+    // MARK: - Converter
+
+    private var converterArea: some View {
+        VStack(spacing: 0) {
+            Spacer()
+
+            // USD 입력
+            converterRow(
+                symbol: "$",
+                currency: "USD",
+                placeholder: "달러 입력",
+                text: $usdText
+            )
+            .focused($converterFocus, equals: .usd)
+            .onChange(of: usdText) { _, val in
+                guard converterFocus == .usd else { return }
+                let cleaned = val.replacingOccurrences(of: ",", with: "")
+                if let usd = Double(cleaned), let rate = exchangeRate?.rate {
+                    krwText = (usd * rate).formatted(.number.precision(.fractionLength(0)))
+                } else if cleaned.isEmpty {
+                    krwText = ""
+                }
+            }
+
+            // 구분선 + 스왑 아이콘
+            HStack {
+                Rectangle()
+                    .fill(Color.primary.opacity(0.1))
+                    .frame(height: 1)
+                Image(systemName: "arrow.up.arrow.down")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 12)
+                Rectangle()
+                    .fill(Color.primary.opacity(0.1))
+                    .frame(height: 1)
+            }
+            .padding(.vertical, 24)
+
+            // KRW 입력
+            converterRow(
+                symbol: "₩",
+                currency: "KRW",
+                placeholder: "원화 입력",
+                text: $krwText
+            )
+            .focused($converterFocus, equals: .krw)
+            .onChange(of: krwText) { _, val in
+                guard converterFocus == .krw else { return }
+                let cleaned = val.replacingOccurrences(of: ",", with: "")
+                if let krw = Double(cleaned), let rate = exchangeRate?.rate {
+                    usdText = (krw / rate).formatted(.number.precision(.fractionLength(2)))
+                } else if cleaned.isEmpty {
+                    usdText = ""
+                }
+            }
+
+            Spacer()
+
+            // 현재 환율 안내
+            if let rate = exchangeRate?.rate {
+                Text("현재 환율  1 USD = ₩\(rate.formatted(.number.precision(.fractionLength(2))))")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func converterRow(symbol: String, currency: String, placeholder: String, text: Binding<String>) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(currency)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text(symbol)
+                    .font(.system(size: 26, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.secondary)
+
+                TextField(placeholder, text: text)
+                    .font(.system(size: 38, weight: .bold, design: .rounded))
+                    .textFieldStyle(.plain)
+            }
+
+            Rectangle()
+                .fill(Color.primary.opacity(0.15))
+                .frame(height: 1.5)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     // MARK: - Chart
@@ -213,7 +331,7 @@ struct ContentView: View {
                     )
                     .foregroundStyle(
                         LinearGradient(
-                            colors: [Color.accentColor.opacity(0.25), .clear],
+                            colors: [Color.accentColor.opacity(0.2), .clear],
                             startPoint: .top, endPoint: .bottom
                         )
                     )
@@ -251,18 +369,18 @@ struct ContentView: View {
 
                 if let selected = selectedPoint {
                     RuleMark(x: .value("Date", selected.date))
-                        .foregroundStyle(Color.secondary.opacity(0.4))
+                        .foregroundStyle(Color.primary.opacity(0.3))
                         .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
 
                     PointMark(x: .value("Date", selected.date), y: .value("Rate", selected.rate))
-                        .foregroundStyle(Color.accentColor)
+                        .foregroundStyle(Color.primary)
                         .symbolSize(80)
                 }
             }
             .chartYScale(domain: yDomain)
             .chartXAxis {
                 AxisMarks(values: .automatic(desiredCount: 5)) { _ in
-                    AxisGridLine().foregroundStyle(Color.white.opacity(0.1))
+                    AxisGridLine().foregroundStyle(Color.primary.opacity(0.08))
                     AxisValueLabel(format: xAxisFormat)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
@@ -270,7 +388,7 @@ struct ContentView: View {
             }
             .chartYAxis {
                 AxisMarks(position: .leading, values: .automatic(desiredCount: 4)) { value in
-                    AxisGridLine().foregroundStyle(Color.white.opacity(0.1))
+                    AxisGridLine().foregroundStyle(Color.primary.opacity(0.08))
                     AxisValueLabel {
                         if let v = value.as(Double.self) {
                             Text(v, format: .number.precision(.fractionLength(0)))
@@ -328,7 +446,7 @@ struct ContentView: View {
         }
         .padding(.horizontal, 7)
         .padding(.vertical, 4)
-        .glassEffect(in: RoundedRectangle(cornerRadius: 6))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 6))
     }
 
     // MARK: - Data Loading
