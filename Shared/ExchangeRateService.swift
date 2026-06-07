@@ -44,10 +44,11 @@ final class ExchangeRateService {
 
     func fetchLatestRate(pair: CurrencyPair = .usdkrw) async throws -> ExchangeRate {
         let result = try await fetchYahoo(ticker: pair.rawValue, range: "1d", interval: "1m")
+        let lastDataTime = result.timestamp?.last.map { Date(timeIntervalSince1970: $0) } ?? Date()
         return ExchangeRate(
             rate: result.meta.regularMarketPrice,
             previousClose: result.meta.chartPreviousClose,
-            updatedAt: Date()
+            updatedAt: lastDataTime
         )
     }
 

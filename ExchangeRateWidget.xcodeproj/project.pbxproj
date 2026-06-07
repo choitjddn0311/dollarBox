@@ -8,7 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		1515D17A43B6862CA1A4CC15 /* ExchangeRate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 368FB9B4DF36F371E5364E40 /* ExchangeRate.swift */; };
+		15EEA196FC927079FDC09B79 /* JournalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17A633C82856877DD27C3ABD /* JournalView.swift */; };
 		22ABF8E97A799154DDAC46B8 /* ExchangeRate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 368FB9B4DF36F371E5364E40 /* ExchangeRate.swift */; };
+		290CE0E20A8A0434212E1F61 /* TradeEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B224ABF8785249B168E66455 /* TradeEntry.swift */; };
 		2D204C44F9CFE4BEB37C82B0 /* RateMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C03745C9804F3458F2EB18B /* RateMonitor.swift */; };
 		32878186D5707171FDC24C45 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 763FDFB57219D5CC23DC7183 /* Config.swift */; };
 		704588F2088033BA0C46F491 /* ExchangeRateProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = C407D12B0A990821A4498707 /* ExchangeRateProvider.swift */; };
@@ -19,6 +21,7 @@
 		9C54231885AAB4599FC361F0 /* ExchangeRateWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 851B2D3FF9414E171F45820A /* ExchangeRateWidget.swift */; };
 		B5EE77A29A60495221EDEA6F /* ExchangeRateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8A890A1B3AEF2945BB7C699 /* ExchangeRateService.swift */; };
 		B8746C794D89477BEC7ADC2F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0248A5E5E0979EEF53871C85 /* Assets.xcassets */; };
+		CED4EE38CD70D5761E7FA4FD /* TradeJournalService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C97DA2A08CA49E9FAB08A546 /* TradeJournalService.swift */; };
 		D85CF44EAEBB03EC82977211 /* ExchangeRateApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B1DF8535326933DB7FF85C8 /* ExchangeRateApp.swift */; };
 		D91DC6CFDA73A359DAC41AAF /* RateDataPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABE3456B77F3197BF4C74A21 /* RateDataPoint.swift */; };
 		E2B0263AF206A6D6A6BEBBB4 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 763FDFB57219D5CC23DC7183 /* Config.swift */; };
@@ -54,6 +57,7 @@
 /* Begin PBXFileReference section */
 		001E47908E0E4012EE7021F3 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
 		0248A5E5E0979EEF53871C85 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		17A633C82856877DD27C3ABD /* JournalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalView.swift; sourceTree = "<group>"; };
 		1B1DF8535326933DB7FF85C8 /* ExchangeRateApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExchangeRateApp.swift; sourceTree = "<group>"; };
 		368FB9B4DF36F371E5364E40 /* ExchangeRate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExchangeRate.swift; sourceTree = "<group>"; };
 		3ED3E01CED085B38F66E964D /* ExchangeRateApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ExchangeRateApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -68,8 +72,10 @@
 		851B2D3FF9414E171F45820A /* ExchangeRateWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExchangeRateWidget.swift; sourceTree = "<group>"; };
 		9E84C38DAF99061423D13BE4 /* ExchangeRateWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExchangeRateWidgetView.swift; sourceTree = "<group>"; };
 		ABE3456B77F3197BF4C74A21 /* RateDataPoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RateDataPoint.swift; sourceTree = "<group>"; };
+		B224ABF8785249B168E66455 /* TradeEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TradeEntry.swift; sourceTree = "<group>"; };
 		BDB0E7CC58ACF8A131F51C43 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		C407D12B0A990821A4498707 /* ExchangeRateProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExchangeRateProvider.swift; sourceTree = "<group>"; };
+		C97DA2A08CA49E9FAB08A546 /* TradeJournalService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TradeJournalService.swift; sourceTree = "<group>"; };
 		D8A890A1B3AEF2945BB7C699 /* ExchangeRateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExchangeRateService.swift; sourceTree = "<group>"; };
 		FAD7879067F2615C5FE0B554 /* ExchangeRateWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ExchangeRateWidgetExtension.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -126,9 +132,12 @@
 				7F03BEF27119A5E3D27416EB /* ExchangeRateApp.entitlements */,
 				1B1DF8535326933DB7FF85C8 /* ExchangeRateApp.swift */,
 				578891CC4C97E3210A31B67F /* Info.plist */,
+				17A633C82856877DD27C3ABD /* JournalView.swift */,
 				001E47908E0E4012EE7021F3 /* MenuBarView.swift */,
 				4C03745C9804F3458F2EB18B /* RateMonitor.swift */,
 				4EB9E00CE835FD9B36853B2D /* SettingsView.swift */,
+				B224ABF8785249B168E66455 /* TradeEntry.swift */,
+				C97DA2A08CA49E9FAB08A546 /* TradeJournalService.swift */,
 			);
 			path = ExchangeRateApp;
 			sourceTree = "<group>";
@@ -231,10 +240,13 @@
 				22ABF8E97A799154DDAC46B8 /* ExchangeRate.swift in Sources */,
 				D85CF44EAEBB03EC82977211 /* ExchangeRateApp.swift in Sources */,
 				B5EE77A29A60495221EDEA6F /* ExchangeRateService.swift in Sources */,
+				15EEA196FC927079FDC09B79 /* JournalView.swift in Sources */,
 				7778B6294D23924C4253BD60 /* MenuBarView.swift in Sources */,
 				D91DC6CFDA73A359DAC41AAF /* RateDataPoint.swift in Sources */,
 				2D204C44F9CFE4BEB37C82B0 /* RateMonitor.swift in Sources */,
 				F4D76463C7E50ECBA6982914 /* SettingsView.swift in Sources */,
+				290CE0E20A8A0434212E1F61 /* TradeEntry.swift in Sources */,
+				CED4EE38CD70D5761E7FA4FD /* TradeJournalService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -2,7 +2,7 @@ import SwiftUI
 import Charts
 import WidgetKit
 
-private enum AppTab { case chart, converter }
+private enum AppTab { case chart, converter, journal }
 private enum ConverterFocus: Hashable { case usd, krw }
 
 struct ContentView: View {
@@ -47,6 +47,17 @@ struct ContentView: View {
         case "dark":  return "moon"
         default:      return "circle.lefthalf.filled"
         }
+    }
+
+    private var currentRates: [CurrencyPair: Double] {
+        var rates: [CurrencyPair: Double] = [:]
+        for pair in CurrencyPair.allCases {
+            if let r = ExchangeRateService.shared.loadRate(pair: pair)?.rate {
+                rates[pair] = r
+            }
+        }
+        if let live = exchangeRate?.rate { rates[selectedPair] = live }
+        return rates
     }
 
     private var minPoint: RateDataPoint? { history.min(by: { $0.rate < $1.rate }) }
@@ -314,9 +325,10 @@ struct ContentView: View {
                 Picker("", selection: $activeTab) {
                     Text("차트").tag(AppTab.chart)
                     Text("환산").tag(AppTab.converter)
+                    Text("일지").tag(AppTab.journal)
                 }
                 .pickerStyle(.segmented)
-                .frame(width: 160)
+                .frame(width: 240)
 
                 Spacer()
 
@@ -324,17 +336,19 @@ struct ContentView: View {
                     periodPicker
                 }
 
-                Button {
-                    showSettings.toggle()
-                } label: {
-                    Image(systemName: "slider.horizontal.3")
-                        .font(.system(size: 14, weight: .medium))
-                        .frame(width: 34, height: 34)
-                }
-                .buttonStyle(.plain)
-                .glassEffect(in: Circle())
-                .popover(isPresented: $showSettings, arrowEdge: .top) {
-                    SettingsView()
+                if activeTab != .journal {
+                    Button {
+                        showSettings.toggle()
+                    } label: {
+                        Image(systemName: "slider.horizontal.3")
+                            .font(.system(size: 14, weight: .medium))
+                            .frame(width: 34, height: 34)
+                    }
+                    .buttonStyle(.plain)
+                    .glassEffect(in: Circle())
+                    .popover(isPresented: $showSettings, arrowEdge: .top) {
+                        SettingsView()
+                    }
                 }
             }
 
@@ -354,8 +368,10 @@ struct ContentView: View {
                     rsiChart
                         .frame(height: 90)
                 }
-            } else {
+            } else if activeTab == .converter {
                 converterArea
+            } else {
+                JournalView(currentRates: currentRates)
             }
         }
         .padding(.horizontal, 24)

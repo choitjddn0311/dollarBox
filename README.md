@@ -15,11 +15,12 @@ dollarBox는 달러-원 환율을 빠르게 확인하기 위해 만든 macOS 앱
 
 ### 메인 앱
 
-- 실시간 USD/KRW 환율 표시 (₩ 기호 포함)
+- 실시간 환율 표시 — USD/KRW, EUR/KRW, JPY/KRW (100엔 기준)
 - 전일 대비 등락폭 및 등락률 표시 (▲/▼)
-- 1주일 / 1개월 / 1년 기간별 환율 차트
+- 1W / 1M / 1Y / 5Y 기간별 환율 차트
 - 차트 위 드래그로 특정 날짜 환율 확인
 - 최고/최저 환율 포인트 및 가격 레이블 표시
+- 52주 고저 게이지 — 현재 환율의 연간 범위 내 위치 표시
 - 수동 새로고침 버튼
 - 테마 모드 3가지 — 라이트 / 다크 / 시스템 따름
 
@@ -27,16 +28,26 @@ dollarBox는 달러-원 환율을 빠르게 확인하기 위해 만든 macOS 앱
 
 | 지표 | 설명 | 지원 기간 |
 |------|------|-----------|
-| MA 7일 | 7일 단순 이동평균 | 1M, 1Y |
-| MA 30일 | 30일 단순 이동평균 | 1Y |
-| 볼린저 밴드 | 20일 기준, 상단·중앙·하단 밴드 (±2σ) | 1M, 1Y |
-| RSI (14) | 14일 Wilder 스무딩, 0-100 스케일 | 1M, 1Y |
+| MA 7일 | 7일 단순 이동평균 | 1M, 1Y, 5Y |
+| MA 30일 | 30일 단순 이동평균 | 1Y, 5Y |
+| 볼린저 밴드 | 20일 기준, 상단·중앙·하단 밴드 (±2σ) | 1M, 1Y, 5Y |
+| RSI (14) | 14일 Wilder 스무딩, 0-100 스케일 | 1M, 1Y, 5Y |
+| 예측선 | 최근 30일 선형 회귀 기반 단기 추세 연장 | 1M, 1Y, 5Y |
+| 52W 게이지 | 52주 최고/최저 범위 내 현재 위치 | 전체 |
 
 **환산 탭**
 
-- 달러 입력 → 원화 자동 계산
-- 원화 입력 → 달러 자동 계산
+- 외화 입력 → 원화 자동 계산 (USD/EUR/JPY 선택)
+- 원화 입력 → 외화 자동 계산
 - 실시간 환율 기준으로 즉시 환산
+
+**환전 일지 탭**
+
+- 환전 기록 추가 — 통화쌍, 날짜, 환전 환율, 금액, 메모 입력
+- 환율 필드에 현재 환율 자동 입력
+- 기록 탭하면 수정, 우클릭 → 삭제
+- 각 기록에 현재 환율 기준 수익률(%) 및 KRW 손익 표시
+- JSON 파일로 로컬 영구 저장 (`~/Application Support/dollarBox/journal.json`)
 
 ### macOS 위젯
 
@@ -82,8 +93,9 @@ https://query1.finance.yahoo.com/v8/finance/chart/USDKRW=X
 
 - 현재 환율: `range=1d&interval=1m` → `meta.regularMarketPrice`
 - 전일 종가: `meta.chartPreviousClose` → 등락폭 계산에 사용
-- 차트 히스토리: `range=5d|1mo|1y&interval=1d` → `timestamps + closes`
+- 차트 히스토리: `range=5d|1mo|1y|5y&interval=1d|1wk` → `timestamps + closes`
 - 캐시 TTL: 30분
+- `updatedAt`: `timestamp` 배열 마지막 값 사용 → 요청 시각이 아닌 실제 마지막 데이터 시각 표시 (주말·공휴일 등 시장 마감 시 정직한 시각 반영)
 
 ---
 
@@ -93,8 +105,13 @@ https://query1.finance.yahoo.com/v8/finance/chart/USDKRW=X
 dollarBox/
 ├── ExchangeRateApp/
 │   ├── ExchangeRateApp.swift         # 앱 진입점
-│   ├── ContentView.swift             # 메인 화면 (차트, 환산, 지표, 테마)
-│   └── SettingsView.swift            # 차트 지표 on/off 설정 화면
+│   ├── ContentView.swift             # 메인 화면 (차트, 환산, 일지, 지표, 테마)
+│   ├── MenuBarView.swift             # 메뉴바 팝오버 UI
+│   ├── RateMonitor.swift             # @Observable 환율 상태 관리
+│   ├── SettingsView.swift            # 차트 지표 on/off 설정 화면
+│   ├── JournalView.swift             # 환전 일지 탭 UI
+│   ├── TradeEntry.swift              # 일지 항목 모델
+│   └── TradeJournalService.swift     # 일지 CRUD + JSON 파일 저장
 │
 ├── ExchangeRateWidgetExtension/
 │   ├── ExchangeRateWidget.swift      # 위젯 등록 (Small/Medium/Large)
@@ -103,7 +120,7 @@ dollarBox/
 │
 ├── Shared/
 │   ├── ExchangeRate.swift            # 현재 환율 + 전일비 계산 모델
-│   ├── RateDataPoint.swift           # 차트 포인트 + RatePeriod 열거형
+│   ├── RateDataPoint.swift           # 차트 포인트 + CurrencyPair + RatePeriod
 │   └── ExchangeRateService.swift     # API 호출, 캐싱, UserDefaults 저장
 │
 └── project.yml                       # xcodegen 프로젝트 스펙
