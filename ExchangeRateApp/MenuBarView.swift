@@ -7,6 +7,7 @@ struct MenuBarView: View {
     @State private var history: [RateDataPoint] = []
     @State private var isLoading = false
     @Environment(\.openWindow) private var openWindow
+    @Environment(RateMonitor.self) private var rateMonitor
 
     private var pair: CurrencyPair {
         CurrencyPair(rawValue: pairRaw) ?? .usdkrw
@@ -127,8 +128,7 @@ struct MenuBarView: View {
 
         if let r = try? await rateTask {
             withAnimation { rate = r }
-            let display = "\(p.label) ₩\(Int(r.rate * p.displayMultiplier).formatted())"
-            UserDefaults.standard.set(display, forKey: "menuBarDisplay")
+            rateMonitor.update(rate: r.rate, pair: p)
         }
         history = (try? await historyTask) ?? []
     }

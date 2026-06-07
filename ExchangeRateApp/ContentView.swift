@@ -7,6 +7,7 @@ private enum ConverterFocus: Hashable { case usd, krw }
 
 struct ContentView: View {
     @AppStorage("themeMode") private var themeMode: String = "system"
+    @Environment(RateMonitor.self) private var rateMonitor
 
     @State private var selectedPair: CurrencyPair = .usdkrw
     @State private var exchangeRate: ExchangeRate?
@@ -788,8 +789,7 @@ struct ContentView: View {
             ExchangeRateService.shared.saveRate(rate, pair: pair)
             withAnimation { exchangeRate = rate }
             WidgetCenter.shared.reloadAllTimelines()
-            let display = "\(pair.label) ₩\(Int(rate.rate * pair.displayMultiplier).formatted())"
-            UserDefaults.standard.set(display, forKey: "menuBarDisplay")
+            rateMonitor.update(rate: rate.rate, pair: pair)
         } catch {
             exchangeRate = ExchangeRateService.shared.loadRate(pair: pair)
         }
