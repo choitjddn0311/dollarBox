@@ -1,6 +1,6 @@
 import Foundation
 
-private let storageKey = "exchangeRate"
+// storageKey는 CurrencyPair.storageKey 로 대체
 
 // MARK: - Yahoo Finance Response
 
@@ -37,13 +37,13 @@ final class ExchangeRateService {
     static let shared = ExchangeRateService()
     private init() {}
 
-    private var historyCache: [RatePeriod: (data: [RateDataPoint], fetchedAt: Date)] = [:]
+    private var historyCache: [CurrencyPair: [RatePeriod: (data: [RateDataPoint], fetchedAt: Date)]] = [:]
     private let cacheTTL: TimeInterval = 30 * 60
 
     // MARK: Current Rate
 
-    func fetchLatestRate() async throws -> ExchangeRate {
-        let result = try await fetchYahoo(range: "1d", interval: "1m")
+    func fetchLatestRate(pair: CurrencyPair = .usdkrw) async throws -> ExchangeRate {
+        let result = try await fetchYahoo(ticker: pair.rawValue, range: "1d", interval: "1m")
         return ExchangeRate(
             rate: result.meta.regularMarketPrice,
             previousClose: result.meta.chartPreviousClose,
@@ -53,8 +53,8 @@ final class ExchangeRateService {
 
     // MARK: History
 
-    func fetchHistory(for period: RatePeriod) async throws -> [RateDataPoint] {
-        if let cached = historyCache[period],
+    func fetchHistory(for period: RatePeriod, pair: CurrencyPair = .usdkrw) async throws -> [RateDataPoint] {
+        if let cached = historyCache[pair]?[period],
            Date().timeIntervalSince(cached.fetchedAt) < cacheTTL {
             return cached.data
         }
@@ -66,17 +66,18 @@ final class ExchangeRateService {
         case .year:  range = "1y"
         }
 
-        let result = try await fetchYahoo(range: range, interval: "1d")
+        let result = try await fetchYahoo(ticker: pair.rawValue, range: range, interval: "1d")
         let points = parseHistory(from: result)
 
-        historyCache[period] = (data: points, fetchedAt: Date())
+        if historyCache[pair] == nil { historyCache[pair] = [:] }
+        historyCache[pair]?[period] = (data: points, fetchedAt: Date())
         return points
     }
 
     // MARK: Core Fetch
 
-    private func fetchYahoo(range: String, interval: String) async throws -> YahooFinanceResponse.Result {
-        var components = URLComponents(string: "https://query1.finance.yahoo.com/v8/finance/chart/USDKRW=X")!
+    private func fetchYahoo(ticker: String, range: String, interval: String) async throws -> YahooFinanceResponse.Result {
+        var components = URLComponents(string: "https://query1.finance.yahoo.com/v8/finance/chart/\(ticker)")!
         components.queryItems = [
             .init(name: "interval", value: interval),
             .init(name: "range", value: range)
@@ -117,14 +118,14 @@ final class ExchangeRateService {
         historyCache.removeAll()
     }
 
-    func saveRate(_ exchangeRate: ExchangeRate) {
+    func saveRate(_ exchangeRate: ExchangeRate, pair: CurrencyPair = .usdkrw) {
         guard let data = try? JSONEncoder().encode(exchangeRate) else { return }
-        UserDefaults.standard.set(data, forKey: storageKey)
+        UserDefaults.standard.set(data, forKey: pair.storageKey)
     }
 
-    func loadRate() -> ExchangeRate? {
+    func loadRate(pair: CurrencyPair = .usdkrw) -> ExchangeRate? {
         guard
-            let data = UserDefaults.standard.data(forKey: storageKey),
+            let data = UserDefaults.standard.data(forKey: pair.storageKey),
             let rate = try? JSONDecoder().decode(ExchangeRate.self, from: data)
         else { return nil }
         return rate

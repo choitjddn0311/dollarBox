@@ -8,6 +8,7 @@ private enum ConverterFocus: Hashable { case usd, krw }
 struct ContentView: View {
     @AppStorage("themeMode") private var themeMode: String = "system"
 
+    @State private var selectedPair: CurrencyPair = .usdkrw
     @State private var exchangeRate: ExchangeRate?
     @State private var history: [RateDataPoint] = []
     @State private var selectedPeriod: RatePeriod = .week
@@ -17,7 +18,7 @@ struct ContentView: View {
 
     // 환산 탭
     @State private var activeTab: AppTab = .chart
-    @State private var usdText: String = ""
+    @State private var baseText: String = ""
     @State private var krwText: String = ""
     @FocusState private var converterFocus: ConverterFocus?
 
@@ -154,9 +155,27 @@ struct ContentView: View {
     private var ratePanel: some View {
         HStack(alignment: .top, spacing: 0) {
             VStack(alignment: .leading, spacing: 6) {
-                Text("USD / KRW")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    Text(selectedPair.headerText)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.secondary)
+
+                    Picker("", selection: $selectedPair) {
+                        ForEach(CurrencyPair.allCases) { pair in
+                            Text(pair.label).tag(pair)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(width: 180)
+                    .onChange(of: selectedPair) { _, _ in
+                        exchangeRate = nil
+                        history = []
+                        selectedPoint = nil
+                        baseText = ""
+                        krwText = ""
+                        Task { await loadAll() }
+                    }
+                }
 
                 ZStack(alignment: .leading) {
                     if isLoadingRate {
@@ -169,7 +188,8 @@ struct ContentView: View {
                                 .font(.system(size: 28, weight: .semibold, design: .rounded))
                                 .foregroundStyle(.secondary)
                             Text(displayedRate.map {
-                                $0.formatted(.number.precision(.fractionLength(2)))
+                                let v = $0 * selectedPair.displayMultiplier
+                                return v.formatted(.number.precision(.fractionLength(2)))
                             } ?? "--")
                             .font(.system(size: 52, weight: .bold, design: .rounded))
                             .contentTransition(.numericText())
@@ -347,19 +367,19 @@ struct ContentView: View {
         VStack(spacing: 0) {
             Spacer()
 
-            // USD 입력
+            // 외화 입력
             converterRow(
-                symbol: "$",
-                currency: "USD",
-                placeholder: "달러 입력",
-                text: $usdText
+                symbol: selectedPair.symbol,
+                currency: selectedPair.label,
+                placeholder: "\(selectedPair.label) 입력",
+                text: $baseText
             )
             .focused($converterFocus, equals: .usd)
-            .onChange(of: usdText) { _, val in
+            .onChange(of: baseText) { _, val in
                 guard converterFocus == .usd else { return }
                 let cleaned = val.replacingOccurrences(of: ",", with: "")
-                if let usd = Double(cleaned), let rate = exchangeRate?.rate {
-                    krwText = (usd * rate).formatted(.number.precision(.fractionLength(0)))
+                if let amount = Double(cleaned), let rate = exchangeRate?.rate {
+                    krwText = (amount * rate).formatted(.number.precision(.fractionLength(0)))
                 } else if cleaned.isEmpty {
                     krwText = ""
                 }
@@ -391,10 +411,10 @@ struct ContentView: View {
             .onChange(of: krwText) { _, val in
                 guard converterFocus == .krw else { return }
                 let cleaned = val.replacingOccurrences(of: ",", with: "")
-                if let krw = Double(cleaned), let rate = exchangeRate?.rate {
-                    usdText = (krw / rate).formatted(.number.precision(.fractionLength(2)))
+                if let krw = Double(cleaned), let rate = exchangeRate?.rate, rate > 0 {
+                    baseText = (krw / rate).formatted(.number.precision(.fractionLength(2)))
                 } else if cleaned.isEmpty {
-                    usdText = ""
+                    baseText = ""
                 }
             }
 
@@ -402,7 +422,9 @@ struct ContentView: View {
 
             // 현재 환율 안내
             if let rate = exchangeRate?.rate {
-                Text("현재 환율  1 USD = ₩\(rate.formatted(.number.precision(.fractionLength(2))))")
+                let displayRate = (rate * selectedPair.displayMultiplier)
+                    .formatted(.number.precision(.fractionLength(2)))
+                Text("현재 환율  \(selectedPair.displayUnitLabel) = ₩\(displayRate)")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -710,21 +732,23 @@ struct ContentView: View {
     private func loadRate() async {
         isLoadingRate = true
         defer { isLoadingRate = false }
+        let pair = selectedPair
         do {
-            let rate = try await ExchangeRateService.shared.fetchLatestRate()
-            ExchangeRateService.shared.saveRate(rate)
+            let rate = try await ExchangeRateService.shared.fetchLatestRate(pair: pair)
+            ExchangeRateService.shared.saveRate(rate, pair: pair)
             withAnimation { exchangeRate = rate }
             WidgetCenter.shared.reloadAllTimelines()
         } catch {
-            exchangeRate = ExchangeRateService.shared.loadRate()
+            exchangeRate = ExchangeRateService.shared.loadRate(pair: pair)
         }
     }
 
     private func loadHistory() async {
         isLoadingChart = true
         defer { isLoadingChart = false }
+        let pair = selectedPair
         do {
-            let points = try await ExchangeRateService.shared.fetchHistory(for: selectedPeriod)
+            let points = try await ExchangeRateService.shared.fetchHistory(for: selectedPeriod, pair: pair)
             withAnimation { history = points }
         } catch {
             history = []
