@@ -19,6 +19,7 @@ private struct YahooFinanceResponse: Decodable {
 
     struct Meta: Decodable {
         let regularMarketPrice: Double
+        let chartPreviousClose: Double?
     }
 
     struct Indicators: Decodable {
@@ -43,7 +44,11 @@ final class ExchangeRateService {
 
     func fetchLatestRate() async throws -> ExchangeRate {
         let result = try await fetchYahoo(range: "1d", interval: "1m")
-        return ExchangeRate(rate: result.meta.regularMarketPrice, updatedAt: Date())
+        return ExchangeRate(
+            rate: result.meta.regularMarketPrice,
+            previousClose: result.meta.chartPreviousClose,
+            updatedAt: Date()
+        )
     }
 
     // MARK: History

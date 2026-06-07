@@ -10,11 +10,11 @@ struct ExchangeRateEntry: TimelineEntry {
 struct ExchangeRateProvider: TimelineProvider {
 
     func placeholder(in context: Context) -> ExchangeRateEntry {
-        ExchangeRateEntry(date: Date(), exchangeRate: ExchangeRate(rate: 1558.84, updatedAt: Date()), chartData: previewData())
+        ExchangeRateEntry(date: Date(), exchangeRate: ExchangeRate(rate: 1558.84, previousClose: 1542.10, updatedAt: Date()), chartData: previewData())
     }
 
     func getSnapshot(in context: Context, completion: @escaping (ExchangeRateEntry) -> Void) {
-        let rate = ExchangeRateService.shared.loadRate() ?? ExchangeRate(rate: 1558.84, updatedAt: Date())
+        let rate = ExchangeRateService.shared.loadRate() ?? ExchangeRate(rate: 1558.84, previousClose: nil, updatedAt: Date())
         completion(ExchangeRateEntry(date: Date(), exchangeRate: rate, chartData: previewData()))
     }
 
@@ -22,7 +22,7 @@ struct ExchangeRateProvider: TimelineProvider {
         Task {
             // FX_DAILY 한 번 호출로 차트 데이터 + 최신 종가 동시에 확보
             let history = (try? await ExchangeRateService.shared.fetchHistory(for: .week)) ?? []
-            let rate = history.last.map { ExchangeRate(rate: $0.rate, updatedAt: $0.date) }
+            let rate = history.last.map { ExchangeRate(rate: $0.rate, previousClose: nil, updatedAt: $0.date) }
                 ?? ExchangeRateService.shared.loadRate()
 
             let entry = ExchangeRateEntry(date: Date(), exchangeRate: rate, chartData: history)

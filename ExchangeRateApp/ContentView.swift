@@ -57,6 +57,20 @@ struct ContentView: View {
     }
 
     private var displayedRate: Double? { selectedPoint?.rate ?? exchangeRate?.rate }
+
+    // MARK: - Moving Average
+
+    private func movingAverage(period: Int) -> [RateDataPoint] {
+        guard history.count >= period else { return [] }
+        return (period - 1 ..< history.count).map { i in
+            let slice = history[(i - period + 1)...i]
+            let avg = slice.map(\.rate).reduce(0, +) / Double(period)
+            return RateDataPoint(date: history[i].date, rate: avg)
+        }
+    }
+
+    private var ma7:  [RateDataPoint] { movingAverage(period: 7) }
+    private var ma30: [RateDataPoint] { movingAverage(period: 30) }
     private var displayedDate: Date?   { selectedPoint?.date ?? exchangeRate?.updatedAt }
     private var isDragging: Bool       { selectedPoint != nil }
 
@@ -114,12 +128,23 @@ struct ContentView: View {
                 }
                 .frame(height: 66)
 
+                if !isDragging, let change = exchangeRate?.change, let pct = exchangeRate?.changePercent {
+                    HStack(spacing: 4) {
+                        Image(systemName: change >= 0 ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill")
+                            .font(.caption2)
+                        Text("\(change >= 0 ? "+" : "")\(change.formatted(.number.precision(.fractionLength(2)))) (\(pct >= 0 ? "+" : "")\(pct.formatted(.number.precision(.fractionLength(2))))%)")
+                            .font(.subheadline.weight(.medium))
+                    }
+                    .foregroundStyle(change >= 0 ? Color.green : Color.red)
+                    .transition(.opacity)
+                }
+
                 if let date = displayedDate {
                     Text(isDragging
                          ? date.formatted(date: .abbreviated, time: .omitted)
                          : "Updated \(date.formatted(date: .omitted, time: .shortened))"
                     )
-                    .font(.subheadline)
+                    .font(.caption)
                     .foregroundStyle(.secondary)
                     .animation(.easeInOut(duration: 0.15), value: isDragging)
                 }
@@ -189,6 +214,10 @@ struct ContentView: View {
                 }
             }
 
+            if activeTab == .chart && selectedPeriod != .week && !history.isEmpty {
+                maLegend
+            }
+
             if activeTab == .chart {
                 chartArea
             } else {
@@ -214,6 +243,32 @@ struct ContentView: View {
         .onChange(of: selectedPeriod) { _, _ in
             selectedPoint = nil
             Task { await loadHistory() }
+        }
+    }
+
+    // MARK: - MA Legend
+
+    private var maLegend: some View {
+        HStack(spacing: 14) {
+            maLegendItem(color: .accentColor, style: [], label: "환율")
+            maLegendItem(color: .orange, style: [4, 3], label: "MA 7")
+            if selectedPeriod == .year {
+                maLegendItem(color: .purple, style: [4, 3], label: "MA 30")
+            }
+        }
+    }
+
+    private func maLegendItem(color: Color, style: [CGFloat], label: String) -> some View {
+        HStack(spacing: 5) {
+            Path { path in
+                path.move(to: CGPoint(x: 0, y: 4))
+                path.addLine(to: CGPoint(x: 18, y: 4))
+            }
+            .stroke(color, style: StrokeStyle(lineWidth: 2, dash: style))
+            .frame(width: 18, height: 8)
+            Text(label)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -346,6 +401,32 @@ struct ContentView: View {
                     .foregroundStyle(Color.accentColor)
                     .lineStyle(StrokeStyle(lineWidth: 2.5))
                     .interpolationMethod(.monotone)
+                }
+
+                // 7일 이동평균 (1M, 1Y)
+                if selectedPeriod != .week {
+                    ForEach(ma7) { point in
+                        LineMark(
+                            x: .value("Date", point.date),
+                            y: .value("MA7", point.rate)
+                        )
+                        .foregroundStyle(Color.orange.opacity(0.8))
+                        .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
+                        .interpolationMethod(.monotone)
+                    }
+                }
+
+                // 30일 이동평균 (1Y)
+                if selectedPeriod == .year {
+                    ForEach(ma30) { point in
+                        LineMark(
+                            x: .value("Date", point.date),
+                            y: .value("MA30", point.rate)
+                        )
+                        .foregroundStyle(Color.purple.opacity(0.8))
+                        .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
+                        .interpolationMethod(.monotone)
+                    }
                 }
 
                 if !isDragging {

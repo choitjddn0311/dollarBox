@@ -249,7 +249,7 @@ struct ExchangeRateWidgetView: View {
 } timeline: {
     ExchangeRateEntry(
         date: .now,
-        exchangeRate: ExchangeRate(rate: 1558.84, updatedAt: .now),
+        exchangeRate: ExchangeRate(rate: 1558.84, previousClose: 1542.10, updatedAt: .now),
         chartData: sampleData()
     )
 }
@@ -259,7 +259,7 @@ struct ExchangeRateWidgetView: View {
 } timeline: {
     ExchangeRateEntry(
         date: .now,
-        exchangeRate: ExchangeRate(rate: 1558.84, updatedAt: .now),
+        exchangeRate: ExchangeRate(rate: 1558.84, previousClose: 1542.10, updatedAt: .now),
         chartData: sampleData()
     )
 }
@@ -269,7 +269,7 @@ struct ExchangeRateWidgetView: View {
 } timeline: {
     ExchangeRateEntry(
         date: .now,
-        exchangeRate: ExchangeRate(rate: 1558.84, updatedAt: .now),
+        exchangeRate: ExchangeRate(rate: 1558.84, previousClose: 1542.10, updatedAt: .now),
         chartData: sampleData()
     )
 }
