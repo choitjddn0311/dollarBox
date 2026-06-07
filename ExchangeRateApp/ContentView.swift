@@ -27,6 +27,7 @@ struct ContentView: View {
     @AppStorage("showMA30")           private var showMA30           = true
     @AppStorage("showBollingerBands") private var showBollingerBands = false
     @AppStorage("showRSI")            private var showRSI            = false
+    @AppStorage("showPrediction")     private var showPrediction     = false
     @State private var showSettings = false
 
     private var preferredScheme: ColorScheme? {
@@ -81,6 +82,38 @@ struct ContentView: View {
     private var ma30: [RateDataPoint] { movingAverage(period: 30) }
     private var displayedDate: Date?   { selectedPoint?.date ?? exchangeRate?.updatedAt }
     private var isDragging: Bool       { selectedPoint != nil }
+
+    // MARK: - 예측선 (선형 회귀)
+
+    private var predictionPoints: [RateDataPoint] {
+        guard showPrediction, selectedPeriod != .week, history.count >= 10 else { return [] }
+        let recent = Array(history.suffix(min(30, history.count)))
+        let n = Double(recent.count)
+        let xs = (0..<recent.count).map { Double($0) }
+        let ys = recent.map(\.rate)
+
+        let sumX  = xs.reduce(0, +)
+        let sumY  = ys.reduce(0, +)
+        let sumXY = zip(xs, ys).map(*).reduce(0, +)
+        let sumX2 = xs.map { $0 * $0 }.reduce(0, +)
+        let denom = n * sumX2 - sumX * sumX
+        guard denom != 0 else { return [] }
+
+        let slope     = (n * sumXY - sumX * sumY) / denom
+        let intercept = (sumY - slope * sumX) / n
+
+        let interval   = recent.last!.date.timeIntervalSince(recent.first!.date) / Double(recent.count - 1)
+        let lastDate   = recent.last!.date
+        let futureDays = selectedPeriod == .year ? 30 : 7
+
+        return (0...futureDays).map { i in
+            let x = Double(recent.count - 1) + Double(i)
+            return RateDataPoint(
+                date: lastDate.addingTimeInterval(interval * Double(i)),
+                rate: max(0, slope * x + intercept)
+            )
+        }
+    }
 
     // MARK: - Bollinger Bands (20일)
 
@@ -346,6 +379,9 @@ struct ContentView: View {
             if showBollingerBands && !bbPoints.isEmpty {
                 legendItem(color: Color(red: 0.9, green: 0.7, blue: 0.1), dash: [3, 2], label: "볼린저")
             }
+            if showPrediction && !predictionPoints.isEmpty {
+                legendItem(color: .mint, dash: [5, 3], label: "예측")
+            }
         }
     }
 
@@ -549,6 +585,20 @@ struct ContentView: View {
                     }
                 }
 
+                // ── 예측선 (선형 회귀)
+                if showPrediction && !predictionPoints.isEmpty {
+                    ForEach(predictionPoints) { pt in
+                        LineMark(
+                            x: .value("Date", pt.date),
+                            y: .value("Rate", pt.rate),
+                            series: .value("S", "pred")
+                        )
+                        .foregroundStyle(Color.mint.opacity(0.85))
+                        .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [5, 3]))
+                        .interpolationMethod(.monotone)
+                    }
+                }
+
                 if !isDragging {
                     if let min = minPoint {
                         PointMark(x: .value("Date", min.date), y: .value("Rate", min.rate))
@@ -738,6 +788,8 @@ struct ContentView: View {
             ExchangeRateService.shared.saveRate(rate, pair: pair)
             withAnimation { exchangeRate = rate }
             WidgetCenter.shared.reloadAllTimelines()
+            let display = "\(pair.label) ₩\(Int(rate.rate * pair.displayMultiplier).formatted())"
+            UserDefaults.standard.set(display, forKey: "menuBarDisplay")
         } catch {
             exchangeRate = ExchangeRateService.shared.loadRate(pair: pair)
         }

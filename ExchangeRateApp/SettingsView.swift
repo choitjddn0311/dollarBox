@@ -5,6 +5,7 @@ struct SettingsView: View {
     @AppStorage("showMA30")            private var showMA30            = true
     @AppStorage("showBollingerBands")  private var showBollingerBands  = false
     @AppStorage("showRSI")             private var showRSI             = false
+    @AppStorage("showPrediction")      private var showPrediction      = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -26,7 +27,13 @@ struct SettingsView: View {
 
             Divider().padding(.vertical, 14)
 
-            Text("1W 기간은 데이터 부족으로 MA·볼린저·RSI가 표시되지 않습니다.")
+            section("추세 분석") {
+                row("예측선", sub: "선형 회귀 기반 단기 추세 연장", isOn: $showPrediction)
+            }
+
+            Divider().padding(.vertical, 14)
+
+            Text("1W 기간은 데이터 부족으로 MA·볼린저·RSI·예측선이 표시되지 않습니다.")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
                 .fixedSize(horizontal: false, vertical: true)

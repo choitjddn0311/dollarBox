@@ -11,6 +11,7 @@
 		22ABF8E97A799154DDAC46B8 /* ExchangeRate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 368FB9B4DF36F371E5364E40 /* ExchangeRate.swift */; };
 		32878186D5707171FDC24C45 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 763FDFB57219D5CC23DC7183 /* Config.swift */; };
 		704588F2088033BA0C46F491 /* ExchangeRateProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = C407D12B0A990821A4498707 /* ExchangeRateProvider.swift */; };
+		7778B6294D23924C4253BD60 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 001E47908E0E4012EE7021F3 /* MenuBarView.swift */; };
 		77C674146FF29311DBC219DA /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDB0E7CC58ACF8A131F51C43 /* ContentView.swift */; };
 		9410533B003802D5883C55A5 /* RateDataPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABE3456B77F3197BF4C74A21 /* RateDataPoint.swift */; };
 		9A0C21C425366C75E395D8F0 /* ExchangeRateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8A890A1B3AEF2945BB7C699 /* ExchangeRateService.swift */; };
@@ -50,6 +51,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		001E47908E0E4012EE7021F3 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
 		0248A5E5E0979EEF53871C85 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1B1DF8535326933DB7FF85C8 /* ExchangeRateApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExchangeRateApp.swift; sourceTree = "<group>"; };
 		368FB9B4DF36F371E5364E40 /* ExchangeRate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExchangeRate.swift; sourceTree = "<group>"; };
@@ -122,6 +124,7 @@
 				7F03BEF27119A5E3D27416EB /* ExchangeRateApp.entitlements */,
 				1B1DF8535326933DB7FF85C8 /* ExchangeRateApp.swift */,
 				578891CC4C97E3210A31B67F /* Info.plist */,
+				001E47908E0E4012EE7021F3 /* MenuBarView.swift */,
 				4EB9E00CE835FD9B36853B2D /* SettingsView.swift */,
 			);
 			path = ExchangeRateApp;
@@ -225,6 +228,7 @@
 				22ABF8E97A799154DDAC46B8 /* ExchangeRate.swift in Sources */,
 				D85CF44EAEBB03EC82977211 /* ExchangeRateApp.swift in Sources */,
 				B5EE77A29A60495221EDEA6F /* ExchangeRateService.swift in Sources */,
+				7778B6294D23924C4253BD60 /* MenuBarView.swift in Sources */,
 				D91DC6CFDA73A359DAC41AAF /* RateDataPoint.swift in Sources */,
 				F4D76463C7E50ECBA6982914 /* SettingsView.swift in Sources */,
 			);
