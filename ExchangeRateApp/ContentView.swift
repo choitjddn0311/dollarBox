@@ -21,6 +21,13 @@ struct ContentView: View {
     @State private var krwText: String = ""
     @FocusState private var converterFocus: ConverterFocus?
 
+    // 차트 지표 설정
+    @AppStorage("showMA7")            private var showMA7            = true
+    @AppStorage("showMA30")           private var showMA30           = true
+    @AppStorage("showBollingerBands") private var showBollingerBands = false
+    @AppStorage("showRSI")            private var showRSI            = false
+    @State private var showSettings = false
+
     private var preferredScheme: ColorScheme? {
         switch themeMode {
         case "light": return .light
@@ -73,6 +80,51 @@ struct ContentView: View {
     private var ma30: [RateDataPoint] { movingAverage(period: 30) }
     private var displayedDate: Date?   { selectedPoint?.date ?? exchangeRate?.updatedAt }
     private var isDragging: Bool       { selectedPoint != nil }
+
+    // MARK: - Bollinger Bands (20일)
+
+    private struct BBPoint: Identifiable {
+        let id = UUID()
+        let date: Date
+        let upper: Double
+        let middle: Double
+        let lower: Double
+    }
+
+    private var bbPoints: [BBPoint] {
+        let p = 20
+        guard history.count >= p else { return [] }
+        return (p - 1 ..< history.count).map { i in
+            let slice = history[(i - p + 1)...i].map(\.rate)
+            let avg   = slice.reduce(0, +) / Double(p)
+            let std   = sqrt(slice.map { pow($0 - avg, 2) }.reduce(0, +) / Double(p))
+            return BBPoint(date: history[i].date, upper: avg + 2 * std, middle: avg, lower: avg - 2 * std)
+        }
+    }
+
+    // MARK: - RSI (14일)
+
+    private var rsiPoints: [RateDataPoint] {
+        let p = 14
+        guard history.count > p else { return [] }
+        var gains  = [Double]()
+        var losses = [Double]()
+        for i in 1 ..< history.count {
+            let d = history[i].rate - history[i - 1].rate
+            gains.append(max(0,  d))
+            losses.append(max(0, -d))
+        }
+        var avgG = gains[0 ..< p].reduce(0, +)  / Double(p)
+        var avgL = losses[0 ..< p].reduce(0, +) / Double(p)
+        var result = [RateDataPoint]()
+        for i in p ..< gains.count {
+            avgG = (avgG * Double(p - 1) + gains[i])  / Double(p)
+            avgL = (avgL * Double(p - 1) + losses[i]) / Double(p)
+            let rsi = avgL == 0 ? 100.0 : 100 - (100 / (1 + avgG / avgL))
+            result.append(RateDataPoint(date: history[i + 1].date, rate: rsi))
+        }
+        return result
+    }
 
     // MARK: - Body
 
@@ -212,14 +264,32 @@ struct ContentView: View {
                 if activeTab == .chart {
                     periodPicker
                 }
+
+                Button {
+                    showSettings.toggle()
+                } label: {
+                    Image(systemName: "slider.horizontal.3")
+                        .font(.system(size: 14, weight: .medium))
+                        .frame(width: 34, height: 34)
+                }
+                .buttonStyle(.plain)
+                .glassEffect(in: Circle())
+                .popover(isPresented: $showSettings, arrowEdge: .top) {
+                    SettingsView()
+                }
             }
 
             if activeTab == .chart && selectedPeriod != .week && !history.isEmpty {
-                maLegend
+                chartLegend
             }
 
             if activeTab == .chart {
                 chartArea
+                if showRSI && selectedPeriod != .week && !rsiPoints.isEmpty {
+                    Divider().padding(.vertical, 2)
+                    rsiChart
+                        .frame(height: 90)
+                }
             } else {
                 converterArea
             }
@@ -246,29 +316,28 @@ struct ContentView: View {
         }
     }
 
-    // MARK: - MA Legend
+    // MARK: - Chart Legend
 
-    private var maLegend: some View {
+    private var chartLegend: some View {
         HStack(spacing: 14) {
-            maLegendItem(color: .accentColor, style: [], label: "환율")
-            maLegendItem(color: .orange, style: [4, 3], label: "MA 7")
-            if selectedPeriod == .year {
-                maLegendItem(color: .purple, style: [4, 3], label: "MA 30")
+            legendItem(color: .accentColor, dash: [],      label: "환율")
+            if showMA7  { legendItem(color: .orange, dash: [4, 3], label: "MA 7") }
+            if showMA30 && selectedPeriod == .year { legendItem(color: .purple, dash: [4, 3], label: "MA 30") }
+            if showBollingerBands && !bbPoints.isEmpty {
+                legendItem(color: Color(red: 0.9, green: 0.7, blue: 0.1), dash: [3, 2], label: "볼린저")
             }
         }
     }
 
-    private func maLegendItem(color: Color, style: [CGFloat], label: String) -> some View {
+    private func legendItem(color: Color, dash: [CGFloat], label: String) -> some View {
         HStack(spacing: 5) {
-            Path { path in
-                path.move(to: CGPoint(x: 0, y: 4))
-                path.addLine(to: CGPoint(x: 18, y: 4))
+            Path { p in
+                p.move(to: .init(x: 0, y: 4))
+                p.addLine(to: .init(x: 18, y: 4))
             }
-            .stroke(color, style: StrokeStyle(lineWidth: 2, dash: style))
+            .stroke(color, style: StrokeStyle(lineWidth: 2, dash: dash))
             .frame(width: 18, height: 8)
-            Text(label)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+            Text(label).font(.caption2).foregroundStyle(.secondary)
         }
     }
 
@@ -378,6 +447,33 @@ struct ContentView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             Chart {
+                // ── 볼린저 밴드 (가장 뒤)
+                if showBollingerBands && selectedPeriod != .week {
+                    let bbColor = Color(red: 0.9, green: 0.7, blue: 0.1)
+                    ForEach(bbPoints) { pt in
+                        LineMark(x: .value("Date", pt.date), y: .value("Rate", pt.upper),
+                                 series: .value("S", "bb-upper"))
+                            .foregroundStyle(bbColor.opacity(0.6))
+                            .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 2]))
+                            .interpolationMethod(.monotone)
+                    }
+                    ForEach(bbPoints) { pt in
+                        LineMark(x: .value("Date", pt.date), y: .value("Rate", pt.lower),
+                                 series: .value("S", "bb-lower"))
+                            .foregroundStyle(bbColor.opacity(0.6))
+                            .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 2]))
+                            .interpolationMethod(.monotone)
+                    }
+                    ForEach(bbPoints) { pt in
+                        LineMark(x: .value("Date", pt.date), y: .value("Rate", pt.middle),
+                                 series: .value("S", "bb-mid"))
+                            .foregroundStyle(bbColor.opacity(0.4))
+                            .lineStyle(StrokeStyle(lineWidth: 1))
+                            .interpolationMethod(.monotone)
+                    }
+                }
+
+                // ── 가격 영역 및 라인
                 ForEach(history) { point in
                     AreaMark(
                         x: .value("Date", point.date),
@@ -396,34 +492,36 @@ struct ContentView: View {
                 ForEach(history) { point in
                     LineMark(
                         x: .value("Date", point.date),
-                        y: .value("Rate", point.rate)
+                        y: .value("Rate", point.rate),
+                        series: .value("S", "rate")
                     )
                     .foregroundStyle(Color.accentColor)
                     .lineStyle(StrokeStyle(lineWidth: 2.5))
                     .interpolationMethod(.monotone)
                 }
 
-                // 7일 이동평균 (1M, 1Y)
-                if selectedPeriod != .week {
+                // ── MA 라인
+                if showMA7 && selectedPeriod != .week {
                     ForEach(ma7) { point in
                         LineMark(
                             x: .value("Date", point.date),
-                            y: .value("MA7", point.rate)
+                            y: .value("Rate", point.rate),
+                            series: .value("S", "ma7")
                         )
-                        .foregroundStyle(Color.orange.opacity(0.8))
+                        .foregroundStyle(Color.orange)
                         .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
                         .interpolationMethod(.monotone)
                     }
                 }
 
-                // 30일 이동평균 (1Y)
-                if selectedPeriod == .year {
+                if showMA30 && selectedPeriod == .year {
                     ForEach(ma30) { point in
                         LineMark(
                             x: .value("Date", point.date),
-                            y: .value("MA30", point.rate)
+                            y: .value("Rate", point.rate),
+                            series: .value("S", "ma30")
                         )
-                        .foregroundStyle(Color.purple.opacity(0.8))
+                        .foregroundStyle(Color.purple)
                         .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
                         .interpolationMethod(.monotone)
                     }
@@ -505,6 +603,75 @@ struct ContentView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+
+    // MARK: - RSI Chart
+
+    private var rsiChart: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("RSI (14)").font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+            Chart {
+                // 과매수 / 과매도 기준선
+                RuleMark(y: .value("과매수", 70))
+                    .foregroundStyle(Color.red.opacity(0.4))
+                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
+                    .annotation(position: .top, alignment: .trailing) {
+                        Text("70").font(.system(size: 9)).foregroundStyle(.red.opacity(0.7))
+                    }
+                RuleMark(y: .value("과매도", 30))
+                    .foregroundStyle(Color.blue.opacity(0.4))
+                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
+                    .annotation(position: .bottom, alignment: .trailing) {
+                        Text("30").font(.system(size: 9)).foregroundStyle(.blue.opacity(0.7))
+                    }
+
+                // RSI 라인
+                ForEach(rsiPoints) { pt in
+                    LineMark(x: .value("Date", pt.date), y: .value("RSI", pt.rate),
+                             series: .value("S", "rsi"))
+                        .foregroundStyle(Color.accentColor)
+                        .lineStyle(StrokeStyle(lineWidth: 1.5))
+                        .interpolationMethod(.monotone)
+                }
+
+                // 드래그 선택 지점
+                if let selected = selectedPoint,
+                   let rsiPt = rsiPoints.min(by: {
+                       abs($0.date.timeIntervalSince(selected.date)) < abs($1.date.timeIntervalSince(selected.date))
+                   }) {
+                    RuleMark(x: .value("Date", selected.date))
+                        .foregroundStyle(Color.primary.opacity(0.3))
+                        .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
+                    PointMark(x: .value("Date", rsiPt.date), y: .value("RSI", rsiPt.rate))
+                        .foregroundStyle(Color.primary)
+                        .symbolSize(50)
+                        .annotation(position: .top) {
+                            Text(rsiPt.rate, format: .number.precision(.fractionLength(1)))
+                                .font(.caption2.bold())
+                                .padding(.horizontal, 5).padding(.vertical, 2)
+                                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 4))
+                        }
+                }
+            }
+            .chartYScale(domain: 0...100)
+            .chartXAxis {
+                AxisMarks(values: .automatic(desiredCount: 5)) { _ in
+                    AxisGridLine().foregroundStyle(Color.primary.opacity(0.06))
+                    AxisValueLabel(format: xAxisFormat).font(.caption2).foregroundStyle(.secondary)
+                }
+            }
+            .chartYAxis {
+                AxisMarks(position: .leading, values: [0, 30, 50, 70, 100]) { value in
+                    AxisGridLine().foregroundStyle(Color.primary.opacity(0.06))
+                    AxisValueLabel {
+                        if let v = value.as(Int.self) {
+                            Text("\(v)").font(.system(size: 9)).foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity)
         }
     }
 
