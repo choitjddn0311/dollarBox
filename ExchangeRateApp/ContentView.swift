@@ -12,6 +12,7 @@ struct ContentView: View {
     @State private var selectedPair: CurrencyPair = .usdkrw
     @State private var exchangeRate: ExchangeRate?
     @State private var history: [RateDataPoint] = []
+    @State private var yearHistory: [RateDataPoint] = []   // 52W 게이지용
     @State private var selectedPeriod: RatePeriod = .week
     @State private var isLoadingRate = false
     @State private var isLoadingChart = false
@@ -29,6 +30,7 @@ struct ContentView: View {
     @AppStorage("showBollingerBands") private var showBollingerBands = false
     @AppStorage("showRSI")            private var showRSI            = false
     @AppStorage("showPrediction")     private var showPrediction     = false
+    @AppStorage("showWeekGauge")      private var showWeekGauge      = true
     @State private var showSettings = false
 
     private var preferredScheme: ColorScheme? {
@@ -60,9 +62,10 @@ struct ContentView: View {
 
     private var xAxisFormat: Date.FormatStyle {
         switch selectedPeriod {
-        case .week:  return .dateTime.weekday(.abbreviated)
-        case .month: return .dateTime.day().month(.abbreviated)
-        case .year:  return .dateTime.month(.abbreviated)
+        case .week:     return .dateTime.weekday(.abbreviated)
+        case .month:    return .dateTime.day().month(.abbreviated)
+        case .year:     return .dateTime.month(.abbreviated)
+        case .fiveYear: return .dateTime.year()
         }
     }
 
@@ -105,7 +108,7 @@ struct ContentView: View {
 
         let interval   = recent.last!.date.timeIntervalSince(recent.first!.date) / Double(recent.count - 1)
         let lastDate   = recent.last!.date
-        let futureDays = selectedPeriod == .year ? 30 : 7
+        let futureDays = selectedPeriod == .year || selectedPeriod == .fiveYear ? 30 : 7
 
         return (0...futureDays).map { i in
             let x = Double(recent.count - 1) + Double(i)
@@ -172,7 +175,7 @@ struct ContentView: View {
             }
             .padding(20)
         }
-        .frame(minWidth: 700, minHeight: 540)
+        .frame(minWidth: 700, minHeight: 560)
         .preferredColorScheme(preferredScheme)
         .task { await loadAll() }
     }
@@ -204,6 +207,7 @@ struct ContentView: View {
                     .onChange(of: selectedPair) { _, _ in
                         exchangeRate = nil
                         history = []
+                        yearHistory = []
                         selectedPoint = nil
                         baseText = ""
                         krwText = ""
@@ -254,6 +258,7 @@ struct ContentView: View {
                     .foregroundStyle(.secondary)
                     .animation(.easeInOut(duration: 0.15), value: isDragging)
                 }
+
             }
 
             Spacer()
@@ -333,6 +338,11 @@ struct ContentView: View {
                 }
             }
 
+            if activeTab == .chart && showWeekGauge && !yearHistory.isEmpty,
+               let current = exchangeRate?.rate {
+                weekGauge(current: current)
+            }
+
             if activeTab == .chart && selectedPeriod != .week && !history.isEmpty {
                 chartLegend
             }
@@ -376,7 +386,7 @@ struct ContentView: View {
         HStack(spacing: 14) {
             legendItem(color: .accentColor, dash: [],      label: "환율")
             if showMA7  { legendItem(color: .orange, dash: [4, 3], label: "MA 7") }
-            if showMA30 && selectedPeriod == .year { legendItem(color: .purple, dash: [4, 3], label: "MA 30") }
+            if showMA30 && selectedPeriod == .year || selectedPeriod == .fiveYear { legendItem(color: .purple, dash: [4, 3], label: "MA 30") }
             if showBollingerBands && !bbPoints.isEmpty {
                 legendItem(color: Color(red: 0.9, green: 0.7, blue: 0.1), dash: [3, 2], label: "볼린저")
             }
@@ -573,7 +583,7 @@ struct ContentView: View {
                     }
                 }
 
-                if showMA30 && selectedPeriod == .year {
+                if showMA30 && selectedPeriod == .year || selectedPeriod == .fiveYear {
                     ForEach(ma30) { point in
                         LineMark(
                             x: .value("Date", point.date),
@@ -748,6 +758,52 @@ struct ContentView: View {
         }
     }
 
+    // MARK: - 52W Gauge
+
+    private func weekGauge(current: Double) -> some View {
+        let rates = yearHistory.map(\.rate)
+        let lo = rates.min() ?? current
+        let hi = rates.max() ?? current
+        let range = hi - lo
+        let pos = range > 0 ? min(max((current - lo) / range, 0), 1) : 0.5
+        let m = selectedPair.displayMultiplier
+
+        return VStack(spacing: 5) {
+            HStack {
+                Text("52W 범위").font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+                Spacer()
+                Text("\(Int((pos * 100).rounded()))% 위치")
+                    .font(.caption2).foregroundStyle(.secondary)
+            }
+
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Color.primary.opacity(0.1)).frame(height: 4)
+                    Capsule()
+                        .fill(LinearGradient(
+                            colors: [Color.blue.opacity(0.5), Color.green.opacity(0.6)],
+                            startPoint: .leading, endPoint: .trailing
+                        ))
+                        .frame(width: geo.size.width * pos, height: 4)
+                    Circle()
+                        .fill(Color.accentColor)
+                        .frame(width: 11, height: 11)
+                        .shadow(color: .accentColor.opacity(0.4), radius: 3)
+                        .offset(x: geo.size.width * pos - 5.5, y: -3.5)
+                }
+            }
+            .frame(height: 11)
+
+            HStack {
+                Text("₩\(Int(lo * m).formatted())")
+                    .font(.caption2).foregroundStyle(.secondary)
+                Spacer()
+                Text("₩\(Int(hi * m).formatted())")
+                    .font(.caption2).foregroundStyle(.secondary)
+            }
+        }
+    }
+
     // MARK: - Helpers
 
     private func nearestPoint(to date: Date) -> RateDataPoint? {
@@ -777,6 +833,15 @@ struct ContentView: View {
         await withTaskGroup(of: Void.self) { group in
             group.addTask { await self.loadRate() }
             group.addTask { await self.loadHistory() }
+            group.addTask { await self.loadYearHistory() }
+        }
+    }
+
+    private func loadYearHistory() async {
+        guard yearHistory.isEmpty else { return }
+        let pair = selectedPair
+        if let points = try? await ExchangeRateService.shared.fetchHistory(for: .year, pair: pair) {
+            withAnimation { yearHistory = points }
         }
     }
 

@@ -6,6 +6,7 @@ struct SettingsView: View {
     @AppStorage("showBollingerBands")  private var showBollingerBands  = false
     @AppStorage("showRSI")             private var showRSI             = false
     @AppStorage("showPrediction")      private var showPrediction      = false
+    @AppStorage("showWeekGauge")       private var showWeekGauge       = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -15,7 +16,7 @@ struct SettingsView: View {
 
             section("이동평균선") {
                 row("MA 7일",   sub: "단기 추세",              isOn: $showMA7)
-                row("MA 30일",  sub: "중기 추세 (1Y 전용)",     isOn: $showMA30)
+                row("MA 30일",  sub: "중기 추세 (1Y·5Y 전용)",  isOn: $showMA30)
             }
 
             Divider().padding(.vertical, 14)
@@ -28,7 +29,8 @@ struct SettingsView: View {
             Divider().padding(.vertical, 14)
 
             section("추세 분석") {
-                row("예측선", sub: "선형 회귀 기반 단기 추세 연장", isOn: $showPrediction)
+                row("예측선",      sub: "선형 회귀 기반 단기 추세 연장", isOn: $showPrediction)
+                row("52W 게이지", sub: "52주 최고/최저 범위 표시",       isOn: $showWeekGauge)
             }
 
             Divider().padding(.vertical, 14)

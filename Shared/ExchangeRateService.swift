@@ -60,13 +60,15 @@ final class ExchangeRateService {
         }
 
         let range: String
+        let interval: String
         switch period {
-        case .week:  range = "5d"
-        case .month: range = "1mo"
-        case .year:  range = "1y"
+        case .week:     range = "5d";  interval = "1d"
+        case .month:    range = "1mo"; interval = "1d"
+        case .year:     range = "1y";  interval = "1d"
+        case .fiveYear: range = "5y";  interval = "1wk"
         }
 
-        let result = try await fetchYahoo(ticker: pair.rawValue, range: range, interval: "1d")
+        let result = try await fetchYahoo(ticker: pair.rawValue, range: range, interval: interval)
         let points = parseHistory(from: result)
 
         if historyCache[pair] == nil { historyCache[pair] = [:] }

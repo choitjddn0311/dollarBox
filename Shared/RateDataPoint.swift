@@ -7,9 +7,10 @@ struct RateDataPoint: Identifiable {
 }
 
 enum RatePeriod: String, CaseIterable, Identifiable {
-    case week = "1W"
-    case month = "1M"
-    case year = "1Y"
+    case week     = "1W"
+    case month    = "1M"
+    case year     = "1Y"
+    case fiveYear = "5Y"
     var id: String { rawValue }
 }
 

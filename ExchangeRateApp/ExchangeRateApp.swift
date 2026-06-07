@@ -9,7 +9,7 @@ struct ExchangeRateApp: App {
             ContentView()
                 .environment(rateMonitor)
         }
-        .defaultSize(width: 720, height: 560)
+        .defaultSize(width: 720, height: 620)
 
         MenuBarExtra {
             MenuBarView()
