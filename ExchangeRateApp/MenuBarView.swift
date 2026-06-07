@@ -128,7 +128,7 @@ struct MenuBarView: View {
 
         if let r = try? await rateTask {
             withAnimation { rate = r }
-            rateMonitor.update(rate: r.rate, pair: p)
+            rateMonitor.update(rate: r.rate, pair: p, changePercent: r.changePercent)
         }
         history = (try? await historyTask) ?? []
     }

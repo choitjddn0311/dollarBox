@@ -4,6 +4,7 @@ import Observation
 @Observable
 final class RateMonitor {
     var displayString: String = ""
+    var changePercent: Double? = nil
 
     init() {
         if let saved = UserDefaults.standard.string(forKey: "menuBarDisplay"), !saved.isEmpty {
@@ -13,15 +14,16 @@ final class RateMonitor {
     }
 
     @MainActor
-    func update(rate: Double, pair: CurrencyPair) {
+    func update(rate: Double, pair: CurrencyPair, changePercent: Double? = nil) {
         let str = "\(pair.label) ₩\(Int(rate * pair.displayMultiplier).formatted())"
         displayString = str
+        self.changePercent = changePercent
         UserDefaults.standard.set(str, forKey: "menuBarDisplay")
     }
 
     @MainActor
     func refresh() async {
         guard let rate = try? await ExchangeRateService.shared.fetchLatestRate(pair: .usdkrw) else { return }
-        update(rate: rate.rate, pair: .usdkrw)
+        update(rate: rate.rate, pair: .usdkrw, changePercent: rate.changePercent)
     }
 }

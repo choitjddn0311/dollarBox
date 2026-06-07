@@ -870,7 +870,7 @@ struct ContentView: View {
             ExchangeRateService.shared.saveRate(rate, pair: pair)
             withAnimation { exchangeRate = rate }
             WidgetCenter.shared.reloadAllTimelines()
-            rateMonitor.update(rate: rate.rate, pair: pair)
+            rateMonitor.update(rate: rate.rate, pair: pair, changePercent: rate.changePercent)
         } catch {
             exchangeRate = ExchangeRateService.shared.loadRate(pair: pair)
         }
