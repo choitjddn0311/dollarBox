@@ -77,22 +77,22 @@ struct ContentView: View {
         }
     }
 
-    private var currentRates: [CurrencyPair: Double] {
-        var rates: [CurrencyPair: Double] = [:]
-        for pair in CurrencyPair.allCases {
-            if let r = ExchangeRateService.shared.loadRate(pair: pair)?.rate {
-                rates[pair] = r
-            }
-        }
-        if let live = exchangeRate?.rate { rates[selectedPair] = live }
-        return rates
-    }
+    // MARK: - Indicator Cache (드래그 중 재계산 방지)
+    @State private var cachedMA7:        [RateDataPoint] = []
+    @State private var cachedMA30:       [RateDataPoint] = []
+    @State private var cachedBB:         [BBPoint]       = []
+    @State private var cachedRSI:        [RateDataPoint] = []
+    @State private var cachedPrediction: [RateDataPoint] = []
+    @State private var cachedMin:        RateDataPoint?  = nil
+    @State private var cachedMax:        RateDataPoint?  = nil
+    @State private var cachedCurrentRates: [CurrencyPair: Double] = [:]
 
-    private var minPoint: RateDataPoint? { history.min(by: { $0.rate < $1.rate }) }
-    private var maxPoint: RateDataPoint? { history.max(by: { $0.rate < $1.rate }) }
+    private var currentRates: [CurrencyPair: Double] { cachedCurrentRates }
+    private var minPoint:     RateDataPoint?          { cachedMin }
+    private var maxPoint:     RateDataPoint?          { cachedMax }
 
     private var yDomain: ClosedRange<Double> {
-        guard let lo = minPoint?.rate, let hi = maxPoint?.rate, lo < hi else {
+        guard let lo = cachedMin?.rate, let hi = cachedMax?.rate, lo < hi else {
             return 1500...1600
         }
         let pad = (hi - lo) * 0.35
@@ -111,97 +111,161 @@ struct ContentView: View {
 
     private var displayedRate: Double? { selectedPoint?.rate ?? exchangeRate?.rate }
 
-    // MARK: - Moving Average
+    private var ma7:             [RateDataPoint] { cachedMA7 }
+    private var ma30:            [RateDataPoint] { cachedMA30 }
+    private var bbPoints:        [BBPoint]       { cachedBB }
+    private var rsiPoints:       [RateDataPoint] { cachedRSI }
+    private var predictionPoints:[RateDataPoint] { showPrediction && selectedPeriod != .week ? cachedPrediction : [] }
+    private var displayedDate:   Date?           { selectedPoint?.date ?? exchangeRate?.updatedAt }
+    private var isDragging:      Bool            { selectedPoint != nil }
 
-    private func movingAverage(period: Int) -> [RateDataPoint] {
-        guard history.count >= period else { return [] }
-        return (period - 1 ..< history.count).map { i in
-            let slice = history[(i - period + 1)...i]
-            let avg = slice.map(\.rate).reduce(0, +) / Double(period)
-            return RateDataPoint(date: history[i].date, rate: avg)
-        }
-    }
-
-    private var ma7:  [RateDataPoint] { movingAverage(period: 7) }
-    private var ma30: [RateDataPoint] { movingAverage(period: 30) }
-    private var displayedDate: Date?   { selectedPoint?.date ?? exchangeRate?.updatedAt }
-    private var isDragging: Bool       { selectedPoint != nil }
-
-    // MARK: - 예측선 (선형 회귀)
-
-    private var predictionPoints: [RateDataPoint] {
-        guard showPrediction, selectedPeriod != .week, history.count >= 10 else { return [] }
-        let recent = Array(history.suffix(min(30, history.count)))
-        let n = Double(recent.count)
-        let xs = (0..<recent.count).map { Double($0) }
-        let ys = recent.map(\.rate)
-
-        let sumX  = xs.reduce(0, +)
-        let sumY  = ys.reduce(0, +)
-        let sumXY = zip(xs, ys).map(*).reduce(0, +)
-        let sumX2 = xs.map { $0 * $0 }.reduce(0, +)
-        let denom = n * sumX2 - sumX * sumX
-        guard denom != 0 else { return [] }
-
-        let slope     = (n * sumXY - sumX * sumY) / denom
-        let intercept = (sumY - slope * sumX) / n
-
-        let interval   = recent.last!.date.timeIntervalSince(recent.first!.date) / Double(recent.count - 1)
-        let lastDate   = recent.last!.date
-        let futureDays = selectedPeriod == .year || selectedPeriod == .fiveYear || selectedPeriod == .all ? 30 : 7
-
-        return (0...futureDays).map { i in
-            let x = Double(recent.count - 1) + Double(i)
-            return RateDataPoint(
-                date: lastDate.addingTimeInterval(interval * Double(i)),
-                rate: max(0, slope * x + intercept)
-            )
-        }
-    }
-
-    // MARK: - Bollinger Bands (20일)
+    // MARK: - Bollinger Bands model
 
     private struct BBPoint: Identifiable {
-        let id = UUID()
+        var id: Date { date }
         let date: Date
         let upper: Double
         let middle: Double
         let lower: Double
     }
 
-    private var bbPoints: [BBPoint] {
-        let p = 20
-        guard history.count >= p else { return [] }
-        return (p - 1 ..< history.count).map { i in
-            let slice = history[(i - p + 1)...i].map(\.rate)
-            let avg   = slice.reduce(0, +) / Double(p)
-            let std   = sqrt(slice.map { pow($0 - avg, 2) }.reduce(0, +) / Double(p))
-            return BBPoint(date: history[i].date, upper: avg + 2 * std, middle: avg, lower: avg - 2 * std)
+    // MARK: - Background Indicator Computation
+
+    private func recomputeIndicators() async {
+        let data   = history
+        let period = selectedPeriod
+
+        guard !data.isEmpty else { return }
+
+        struct Snapshot {
+            var ma7:        [RateDataPoint]
+            var ma30:       [RateDataPoint]
+            var bb:         [BBPoint]
+            var rsi:        [RateDataPoint]
+            var prediction: [RateDataPoint]
+            var min:        RateDataPoint?
+            var max:        RateDataPoint?
         }
+
+        let snap = await Task.detached(priority: .userInitiated) { () -> Snapshot in
+            // — min / max (단일 패스)
+            var minPt = data[0], maxPt = data[0]
+            for pt in data {
+                if pt.rate < minPt.rate { minPt = pt }
+                if pt.rate > maxPt.rate { maxPt = pt }
+            }
+
+            // — 슬라이딩 윈도우 MA  O(n)
+            func slidingMA(_ p: Int) -> [RateDataPoint] {
+                guard data.count >= p else { return [] }
+                var sum = data[0..<p].reduce(0.0) { $0 + $1.rate }
+                var result = [RateDataPoint]()
+                result.reserveCapacity(data.count - p + 1)
+                result.append(RateDataPoint(date: data[p - 1].date, rate: sum / Double(p)))
+                for i in p..<data.count {
+                    sum += data[i].rate - data[i - p].rate
+                    result.append(RateDataPoint(date: data[i].date, rate: sum / Double(p)))
+                }
+                return result
+            }
+
+            // — 슬라이딩 윈도우 볼린저 밴드  O(n)
+            let bbP = 20
+            var bbResult = [BBPoint]()
+            if data.count >= bbP {
+                bbResult.reserveCapacity(data.count - bbP + 1)
+                var wSum  = data[0..<bbP].reduce(0.0) { $0 + $1.rate }
+                var wSum2 = data[0..<bbP].reduce(0.0) { $0 + $1.rate * $1.rate }
+                func bbPoint(at i: Int) -> BBPoint {
+                    let avg = wSum  / Double(bbP)
+                    let variance = wSum2 / Double(bbP) - avg * avg
+                    let std = variance > 0 ? sqrt(variance) : 0
+                    return BBPoint(date: data[i].date,
+                                   upper: avg + 2 * std, middle: avg, lower: avg - 2 * std)
+                }
+                bbResult.append(bbPoint(at: bbP - 1))
+                for i in bbP..<data.count {
+                    let out = data[i - bbP].rate
+                    let inn = data[i].rate
+                    wSum  += inn - out
+                    wSum2 += inn * inn - out * out
+                    bbResult.append(bbPoint(at: i))
+                }
+            }
+
+            // — RSI 14일 Wilder  O(n)
+            let rsiP = 14
+            var rsiResult = [RateDataPoint]()
+            if data.count > rsiP {
+                rsiResult.reserveCapacity(data.count - rsiP)
+                var avgG = 0.0, avgL = 0.0
+                for i in 1...rsiP {
+                    let d = data[i].rate - data[i - 1].rate
+                    avgG += max(0,  d)
+                    avgL += max(0, -d)
+                }
+                avgG /= Double(rsiP); avgL /= Double(rsiP)
+                for i in rsiP..<data.count - 1 {
+                    let d = data[i + 1].rate - data[i].rate
+                    avgG = (avgG * Double(rsiP - 1) + max(0,  d)) / Double(rsiP)
+                    avgL = (avgL * Double(rsiP - 1) + max(0, -d)) / Double(rsiP)
+                    let rsi = avgL == 0 ? 100.0 : 100 - (100 / (1 + avgG / avgL))
+                    rsiResult.append(RateDataPoint(date: data[i + 1].date, rate: rsi))
+                }
+            }
+
+            // — 예측선 선형회귀  O(n)
+            var predResult = [RateDataPoint]()
+            if data.count >= 10 {
+                let recent = Array(data.suffix(min(30, data.count)))
+                let n = Double(recent.count)
+                var sumX = 0.0, sumY = 0.0, sumXY = 0.0, sumX2 = 0.0
+                for (i, pt) in recent.enumerated() {
+                    let x = Double(i)
+                    sumX += x; sumY += pt.rate
+                    sumXY += x * pt.rate; sumX2 += x * x
+                }
+                let denom = n * sumX2 - sumX * sumX
+                if denom != 0 {
+                    let slope     = (n * sumXY - sumX * sumY) / denom
+                    let intercept = (sumY - slope * sumX) / n
+                    let interval  = recent.last!.date.timeIntervalSince(recent.first!.date) / Double(recent.count - 1)
+                    let lastDate  = recent.last!.date
+                    let futureDays = (period == .year || period == .fiveYear || period == .all) ? 30 : 7
+                    predResult.reserveCapacity(futureDays + 1)
+                    for i in 0...futureDays {
+                        let x = Double(recent.count - 1 + i)
+                        predResult.append(RateDataPoint(
+                            date: lastDate.addingTimeInterval(interval * Double(i)),
+                            rate: max(0, slope * x + intercept)
+                        ))
+                    }
+                }
+            }
+
+            return Snapshot(ma7: slidingMA(7), ma30: slidingMA(30),
+                            bb: bbResult, rsi: rsiResult, prediction: predResult,
+                            min: minPt, max: maxPt)
+        }.value
+
+        cachedMA7        = snap.ma7
+        cachedMA30       = snap.ma30
+        cachedBB         = snap.bb
+        cachedRSI        = snap.rsi
+        cachedPrediction = snap.prediction
+        cachedMin        = snap.min
+        cachedMax        = snap.max
     }
 
-    // MARK: - RSI (14일)
-
-    private var rsiPoints: [RateDataPoint] {
-        let p = 14
-        guard history.count > p else { return [] }
-        var gains  = [Double]()
-        var losses = [Double]()
-        for i in 1 ..< history.count {
-            let d = history[i].rate - history[i - 1].rate
-            gains.append(max(0,  d))
-            losses.append(max(0, -d))
+    private func recomputeCurrentRates() {
+        var rates: [CurrencyPair: Double] = [:]
+        for pair in CurrencyPair.allCases {
+            if let r = ExchangeRateService.shared.loadRate(pair: pair)?.rate {
+                rates[pair] = r
+            }
         }
-        var avgG = gains[0 ..< p].reduce(0, +)  / Double(p)
-        var avgL = losses[0 ..< p].reduce(0, +) / Double(p)
-        var result = [RateDataPoint]()
-        for i in p ..< gains.count {
-            avgG = (avgG * Double(p - 1) + gains[i])  / Double(p)
-            avgL = (avgL * Double(p - 1) + losses[i]) / Double(p)
-            let rsi = avgL == 0 ? 100.0 : 100 - (100 / (1 + avgG / avgL))
-            result.append(RateDataPoint(date: history[i + 1].date, rate: rsi))
-        }
-        return result
+        if let live = exchangeRate?.rate { rates[selectedPair] = live }
+        cachedCurrentRates = rates
     }
 
     // MARK: - Body
@@ -225,6 +289,8 @@ struct ContentView: View {
                 await loadHourlyHistory()
             }
         }
+        .onChange(of: history.count)    { _, _ in Task { await recomputeIndicators() } }
+        .onChange(of: exchangeRate?.rate) { _, _ in recomputeCurrentRates() }
     }
 
     // MARK: - Background
