@@ -59,9 +59,13 @@ struct ContentView: View {
     @AppStorage("showMA30")           private var showMA30           = true
     @AppStorage("showBollingerBands") private var showBollingerBands = false
     @AppStorage("showRSI")            private var showRSI            = false
+    @AppStorage("showMACD")           private var showMACD           = false
     @AppStorage("showPrediction")     private var showPrediction     = false
     @AppStorage("showWeekGauge")      private var showWeekGauge      = true
+    @AppStorage("showCandlestick")    private var showCandlestick    = false
+    @AppStorage("showFibonacci")      private var showFibonacci      = false
     @State private var showSettings = false
+    @State private var ohlcHistory: [OHLCDataPoint] = []
 
     private var preferredScheme: ColorScheme? {
         switch themeMode {
@@ -88,6 +92,7 @@ struct ContentView: View {
     @State private var cachedMin:        RateDataPoint?  = nil
     @State private var cachedMax:        RateDataPoint?  = nil
     @State private var cachedCurrentRates: [CurrencyPair: Double] = [:]
+    @State private var cachedMACD: [MACDPoint] = []
 
     private var currentRates: [CurrencyPair: Double] { cachedCurrentRates }
     private var minPoint:     RateDataPoint?          { cachedMin }
@@ -121,7 +126,7 @@ struct ContentView: View {
     private var displayedDate:   Date?           { selectedPoint?.date ?? exchangeRate?.updatedAt }
     private var isDragging:      Bool            { selectedPoint != nil }
 
-    // MARK: - Bollinger Bands model
+    // MARK: - Indicator models
 
     private struct BBPoint: Identifiable {
         var id: Date { date }
@@ -129,6 +134,14 @@ struct ContentView: View {
         let upper: Double
         let middle: Double
         let lower: Double
+    }
+
+    private struct MACDPoint: Identifiable {
+        var id: Date { date }
+        let date: Date
+        let macd: Double
+        let signal: Double
+        let histogram: Double
     }
 
     // MARK: - Background Indicator Computation
@@ -144,6 +157,7 @@ struct ContentView: View {
             var ma30:       [RateDataPoint]
             var bb:         [BBPoint]
             var rsi:        [RateDataPoint]
+            var macd:       [MACDPoint]
             var prediction: [RateDataPoint]
             var min:        RateDataPoint?
             var max:        RateDataPoint?
@@ -216,6 +230,39 @@ struct ContentView: View {
                 }
             }
 
+            // — MACD (EMA12 - EMA26, Signal EMA9)
+            var macdResult = [MACDPoint]()
+            if data.count >= 35 {
+                func ema(_ n: Int) -> [Double] {
+                    let k = 2.0 / Double(n + 1)
+                    var out = [Double]()
+                    out.reserveCapacity(data.count)
+                    var e = data[0..<n].reduce(0.0) { $0 + $1.rate } / Double(n)
+                    for _ in 0..<(n - 1) { out.append(0) }
+                    out.append(e)
+                    for i in n..<data.count {
+                        e = data[i].rate * k + e * (1 - k)
+                        out.append(e)
+                    }
+                    return out
+                }
+                let ema12 = ema(12)
+                let ema26 = ema(26)
+                var macdLine = (0..<data.count).map { ema12[$0] - ema26[$0] }
+                let start = 25
+                let sigP  = 9
+                if data.count > start + sigP {
+                    let k9 = 2.0 / Double(sigP + 1)
+                    var sig = macdLine[start..<(start + sigP)].reduce(0.0, +) / Double(sigP)
+                    for i in (start + sigP)..<data.count {
+                        sig = macdLine[i] * k9 + sig * (1 - k9)
+                        macdResult.append(MACDPoint(date: data[i].date,
+                                                    macd: macdLine[i], signal: sig,
+                                                    histogram: macdLine[i] - sig))
+                    }
+                }
+            }
+
             // — 예측선 선형회귀  O(n)
             var predResult = [RateDataPoint]()
             if data.count >= 10 {
@@ -246,7 +293,7 @@ struct ContentView: View {
             }
 
             return Snapshot(ma7: slidingMA(7), ma30: slidingMA(30),
-                            bb: bbResult, rsi: rsiResult, prediction: predResult,
+                            bb: bbResult, rsi: rsiResult, macd: macdResult, prediction: predResult,
                             min: minPt, max: maxPt)
         }.value
 
@@ -254,6 +301,7 @@ struct ContentView: View {
         cachedMA30       = snap.ma30
         cachedBB         = snap.bb
         cachedRSI        = snap.rsi
+        cachedMACD       = snap.macd
         cachedPrediction = snap.prediction
         cachedMin        = snap.min
         cachedMax        = snap.max
@@ -322,6 +370,7 @@ struct ContentView: View {
                     .onChange(of: selectedPair) { _, _ in
                         exchangeRate = nil
                         history = []
+                        ohlcHistory = []
                         yearHistory = []
                         patternHistory = []
                         hourlyHistory = []
@@ -490,6 +539,11 @@ struct ContentView: View {
                     rsiChart
                         .frame(height: 90)
                 }
+                if showMACD && selectedPeriod != .week && !cachedMACD.isEmpty {
+                    Divider().padding(.vertical, 2)
+                    macdChart
+                        .frame(height: 90)
+                }
             } else if activeTab == .converter {
                 converterArea
             } else if activeTab == .invest {
@@ -530,11 +584,19 @@ struct ContentView: View {
 
     private var chartLegend: some View {
         HStack(spacing: 14) {
-            legendItem(color: .accentColor, dash: [],      label: "환율")
-            if showMA7  { legendItem(color: .orange, dash: [4, 3], label: "MA 7") }
-            if showMA30 && (selectedPeriod == .year || selectedPeriod == .fiveYear || selectedPeriod == .all) { legendItem(color: .purple, dash: [4, 3], label: "MA 30") }
+            if !showCandlestick { legendItem(color: .accentColor, dash: [], label: "환율") }
+            if showCandlestick  { legendItem(color: .green, dash: [], label: "양봉"); legendItem(color: .red, dash: [], label: "음봉") }
+            if showMA7          { legendItem(color: .orange, dash: [4, 3], label: "MA 7") }
+            if showMA30 && (selectedPeriod == .year || selectedPeriod == .fiveYear || selectedPeriod == .all) {
+                legendItem(color: .purple, dash: [4, 3], label: "MA 30")
+            }
             if showBollingerBands && !bbPoints.isEmpty {
                 legendItem(color: Color(red: 0.9, green: 0.7, blue: 0.1), dash: [3, 2], label: "볼린저")
+            }
+            if showFibonacci { legendItem(color: .yellow, dash: [4, 3], label: "피보나치") }
+            if showMACD && !cachedMACD.isEmpty {
+                legendItem(color: .blue,   dash: [],      label: "MACD")
+                legendItem(color: .orange, dash: [4, 3], label: "Signal")
             }
             if showPrediction && !predictionPoints.isEmpty {
                 legendItem(color: .mint, dash: [5, 3], label: "예측")
@@ -688,31 +750,77 @@ struct ContentView: View {
                     }
                 }
 
-                // ── 가격 영역 및 라인
-                ForEach(history) { point in
-                    AreaMark(
-                        x: .value("Date", point.date),
-                        yStart: .value("Base", yDomain.lowerBound),
-                        yEnd: .value("Rate", point.rate)
-                    )
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [Color.accentColor.opacity(0.2), .clear],
-                            startPoint: .top, endPoint: .bottom
+                // ── 가격 (캔들스틱 or 라인)
+                if showCandlestick && !ohlcHistory.isEmpty {
+                    ForEach(ohlcHistory) { pt in
+                        // wick
+                        RuleMark(
+                            x: .value("Date", pt.date),
+                            yStart: .value("Low",  pt.low),
+                            yEnd:   .value("High", pt.high)
                         )
-                    )
-                    .interpolationMethod(.monotone)
+                        .foregroundStyle(pt.isBullish ? Color.green.opacity(0.8) : Color.red.opacity(0.8))
+                        .lineStyle(StrokeStyle(lineWidth: 1))
+                    }
+                    ForEach(ohlcHistory) { pt in
+                        // body
+                        BarMark(
+                            x: .value("Date", pt.date),
+                            yStart: .value("Open",  pt.isBullish ? pt.open  : pt.close),
+                            yEnd:   .value("Close", pt.isBullish ? pt.close : pt.open)
+                        )
+                        .foregroundStyle(pt.isBullish ? Color.green.opacity(0.85) : Color.red.opacity(0.85))
+                    }
+                } else {
+                    ForEach(history) { point in
+                        AreaMark(
+                            x: .value("Date", point.date),
+                            yStart: .value("Base", yDomain.lowerBound),
+                            yEnd: .value("Rate", point.rate)
+                        )
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [Color.accentColor.opacity(0.2), .clear],
+                                startPoint: .top, endPoint: .bottom
+                            )
+                        )
+                        .interpolationMethod(.monotone)
+                    }
+                    ForEach(history) { point in
+                        LineMark(
+                            x: .value("Date", point.date),
+                            y: .value("Rate", point.rate),
+                            series: .value("S", "rate")
+                        )
+                        .foregroundStyle(Color.accentColor)
+                        .lineStyle(StrokeStyle(lineWidth: 2.5))
+                        .interpolationMethod(.monotone)
+                    }
                 }
 
-                ForEach(history) { point in
-                    LineMark(
-                        x: .value("Date", point.date),
-                        y: .value("Rate", point.rate),
-                        series: .value("S", "rate")
-                    )
-                    .foregroundStyle(Color.accentColor)
-                    .lineStyle(StrokeStyle(lineWidth: 2.5))
-                    .interpolationMethod(.monotone)
+                // ── 피보나치 되돌림 레벨
+                if showFibonacci && selectedPeriod != .week,
+                   let lo = cachedMin?.rate, let hi = cachedMax?.rate, hi > lo {
+                    let fibLevels: [(Double, String)] = [
+                        (0.000, "0%"),
+                        (0.236, "23.6%"),
+                        (0.382, "38.2%"),
+                        (0.500, "50%"),
+                        (0.618, "61.8%"),
+                        (0.786, "78.6%"),
+                        (1.000, "100%")
+                    ]
+                    ForEach(fibLevels, id: \.1) { ratio, label in
+                        let price = lo + ratio * (hi - lo)
+                        RuleMark(y: .value("Fib", price))
+                            .foregroundStyle(Color.yellow.opacity(0.45))
+                            .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
+                            .annotation(position: .trailing, alignment: .leading) {
+                                Text(label)
+                                    .font(.system(size: 8))
+                                    .foregroundStyle(.yellow.opacity(0.7))
+                            }
+                    }
                 }
 
                 // ── MA 라인
@@ -904,6 +1012,88 @@ struct ContentView: View {
         }
     }
 
+    // MARK: - MACD Chart
+
+    private var macdChart: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("MACD").font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+            let histMax = cachedMACD.map { abs($0.histogram) }.max() ?? 1
+            Chart {
+                // 기준선
+                RuleMark(y: .value("Zero", 0))
+                    .foregroundStyle(Color.primary.opacity(0.2))
+                    .lineStyle(StrokeStyle(lineWidth: 1))
+
+                // 히스토그램
+                ForEach(cachedMACD) { pt in
+                    BarMark(
+                        x: .value("Date", pt.date),
+                        yStart: .value("Base", 0),
+                        yEnd: .value("Hist", pt.histogram)
+                    )
+                    .foregroundStyle(pt.histogram >= 0
+                                     ? Color.green.opacity(0.55)
+                                     : Color.red.opacity(0.55))
+                }
+
+                // MACD 라인
+                ForEach(cachedMACD) { pt in
+                    LineMark(x: .value("Date", pt.date), y: .value("MACD", pt.macd),
+                             series: .value("S", "macd"))
+                        .foregroundStyle(Color.blue)
+                        .lineStyle(StrokeStyle(lineWidth: 1.5))
+                        .interpolationMethod(.monotone)
+                }
+
+                // Signal 라인
+                ForEach(cachedMACD) { pt in
+                    LineMark(x: .value("Date", pt.date), y: .value("Signal", pt.signal),
+                             series: .value("S", "signal"))
+                        .foregroundStyle(Color.orange)
+                        .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
+                        .interpolationMethod(.monotone)
+                }
+
+                if let selected = selectedPoint,
+                   let mpt = cachedMACD.min(by: {
+                       abs($0.date.timeIntervalSince(selected.date)) < abs($1.date.timeIntervalSince(selected.date))
+                   }) {
+                    RuleMark(x: .value("Date", selected.date))
+                        .foregroundStyle(Color.primary.opacity(0.3))
+                        .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
+                    PointMark(x: .value("Date", mpt.date), y: .value("MACD", mpt.macd))
+                        .foregroundStyle(Color.blue)
+                        .symbolSize(40)
+                        .annotation(position: .top) {
+                            Text(mpt.macd, format: .number.precision(.fractionLength(1)))
+                                .font(.caption2.bold())
+                                .padding(.horizontal, 4).padding(.vertical, 2)
+                                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 4))
+                        }
+                }
+            }
+            .chartYScale(domain: -histMax * 2.5...histMax * 2.5)
+            .chartXAxis {
+                AxisMarks(values: .automatic(desiredCount: 5)) { _ in
+                    AxisGridLine().foregroundStyle(Color.primary.opacity(0.06))
+                    AxisValueLabel(format: xAxisFormat).font(.caption2).foregroundStyle(.secondary)
+                }
+            }
+            .chartYAxis {
+                AxisMarks(position: .leading, values: .automatic(desiredCount: 3)) { value in
+                    AxisGridLine().foregroundStyle(Color.primary.opacity(0.06))
+                    AxisValueLabel {
+                        if let v = value.as(Double.self) {
+                            Text(v, format: .number.precision(.fractionLength(1)))
+                                .font(.system(size: 9)).foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity)
+        }
+    }
+
     // MARK: - 52W Gauge
 
     private func weekGauge(current: Double) -> some View {
@@ -1009,12 +1199,16 @@ struct ContentView: View {
     private func loadHistory() async {
         isLoadingChart = true
         defer { isLoadingChart = false }
-        let pair = selectedPair
+        let pair   = selectedPair
+        let period = selectedPeriod
         do {
-            let points = try await ExchangeRateService.shared.fetchHistory(for: selectedPeriod, pair: pair)
+            let points = try await ExchangeRateService.shared.fetchHistory(for: period, pair: pair)
             withAnimation { history = points.filter { $0.rate > 0 } }
+            let ohlc = ExchangeRateService.shared.cachedOHLC(for: period, pair: pair)
+            withAnimation { ohlcHistory = ohlc }
         } catch {
             history = []
+            ohlcHistory = []
         }
     }
 

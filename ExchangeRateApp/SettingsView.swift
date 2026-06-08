@@ -5,8 +5,11 @@ struct SettingsView: View {
     @AppStorage("showMA30")            private var showMA30            = true
     @AppStorage("showBollingerBands")  private var showBollingerBands  = false
     @AppStorage("showRSI")             private var showRSI             = false
+    @AppStorage("showMACD")            private var showMACD            = false
     @AppStorage("showPrediction")      private var showPrediction      = false
     @AppStorage("showWeekGauge")       private var showWeekGauge       = true
+    @AppStorage("showCandlestick")     private var showCandlestick     = false
+    @AppStorage("showFibonacci")       private var showFibonacci       = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -24,18 +27,26 @@ struct SettingsView: View {
             section("기술적 지표") {
                 row("볼린저 밴드", sub: "20일 기준 변동 구간",        isOn: $showBollingerBands)
                 row("RSI (14)",   sub: "과매수 70↑  ·  과매도 30↓", isOn: $showRSI)
+                row("MACD",       sub: "EMA12-EMA26 모멘텀 지표",    isOn: $showMACD)
             }
 
             Divider().padding(.vertical, 14)
 
             section("추세 분석") {
-                row("예측선",      sub: "선형 회귀 기반 단기 추세 연장", isOn: $showPrediction)
-                row("52W 게이지", sub: "52주 최고/최저 범위 표시",       isOn: $showWeekGauge)
+                row("예측선",         sub: "선형 회귀 기반 단기 추세 연장",    isOn: $showPrediction)
+                row("피보나치",        sub: "고점-저점 간 되돌림 레벨 표시",    isOn: $showFibonacci)
+                row("52W 게이지",     sub: "52주 최고/최저 범위 표시",         isOn: $showWeekGauge)
             }
 
             Divider().padding(.vertical, 14)
 
-            Text("1W 기간은 데이터 부족으로 MA·볼린저·RSI·예측선이 표시되지 않습니다.")
+            section("차트 스타일") {
+                row("캔들스틱",  sub: "라인 차트 → OHLC 캔들 차트로 전환", isOn: $showCandlestick)
+            }
+
+            Divider().padding(.vertical, 14)
+
+            Text("1W 기간은 데이터 부족으로 MA·볼린저·RSI·MACD·예측선이 표시되지 않습니다.")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
                 .fixedSize(horizontal: false, vertical: true)

@@ -6,11 +6,22 @@ struct RateDataPoint: Identifiable {
     let rate: Double
 }
 
+struct OHLCDataPoint: Identifiable {
+    var id: Date { date }
+    let date: Date
+    let open: Double
+    let high: Double
+    let low: Double
+    let close: Double
+    var isBullish: Bool { close >= open }
+}
+
 enum RatePeriod: String, CaseIterable, Identifiable {
     case week     = "1W"
     case month    = "1M"
     case year     = "1Y"
     case fiveYear = "5Y"
+    case all      = "전체"
     var id: String { rawValue }
 }
 

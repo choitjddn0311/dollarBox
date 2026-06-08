@@ -27,6 +27,9 @@ private struct YahooFinanceResponse: Decodable {
     }
 
     struct Quote: Decodable {
+        let open:  [Double?]?
+        let high:  [Double?]?
+        let low:   [Double?]?
         let close: [Double?]?
     }
 }
@@ -37,8 +40,9 @@ final class ExchangeRateService {
     static let shared = ExchangeRateService()
     private init() {}
 
-    private var historyCache: [CurrencyPair: [RatePeriod: (data: [RateDataPoint], fetchedAt: Date)]] = [:]
-    private var hourlyCache: [CurrencyPair: (data: [RateDataPoint], fetchedAt: Date)] = [:]
+    private var historyCache: [CurrencyPair: [RatePeriod: (data: [RateDataPoint],    fetchedAt: Date)]] = [:]
+    private var ohlcCache:    [CurrencyPair: [RatePeriod: (data: [OHLCDataPoint],    fetchedAt: Date)]] = [:]
+    private var hourlyCache:  [CurrencyPair: (data: [RateDataPoint], fetchedAt: Date)] = [:]
     private let cacheTTL: TimeInterval = 30 * 60
 
     // MARK: Current Rate
@@ -73,10 +77,21 @@ final class ExchangeRateService {
 
         let result = try await fetchYahoo(ticker: pair.rawValue, range: range, interval: interval)
         let points = parseHistory(from: result)
+        let ohlc   = parseOHLC(from: result)
 
         if historyCache[pair] == nil { historyCache[pair] = [:] }
         historyCache[pair]?[period] = (data: points, fetchedAt: Date())
+
+        if ohlcCache[pair] == nil { ohlcCache[pair] = [:] }
+        ohlcCache[pair]?[period] = (data: ohlc, fetchedAt: Date())
+
         return points
+    }
+
+    func cachedOHLC(for period: RatePeriod, pair: CurrencyPair = .usdkrw) -> [OHLCDataPoint] {
+        guard let cached = ohlcCache[pair]?[period],
+              Date().timeIntervalSince(cached.fetchedAt) < cacheTTL else { return [] }
+        return cached.data
     }
 
     // MARK: Hourly History (Heatmap)
@@ -116,6 +131,25 @@ final class ExchangeRateService {
         return result
     }
 
+    private func parseOHLC(from result: YahooFinanceResponse.Result) -> [OHLCDataPoint] {
+        guard let timestamps = result.timestamp,
+              let quote = result.indicators?.quote?.first,
+              let opens  = quote.open,
+              let highs  = quote.high,
+              let lows   = quote.low,
+              let closes = quote.close
+        else { return [] }
+
+        return zip(timestamps, zip(zip(opens, highs), zip(lows, closes)))
+            .compactMap { ts, quad -> OHLCDataPoint? in
+                let ((o, h), (l, c)) = quad
+                guard let o, let h, let l, let c, c > 0 else { return nil }
+                return OHLCDataPoint(date: Date(timeIntervalSince1970: ts),
+                                     open: o, high: h, low: l, close: c)
+            }
+            .sorted { $0.date < $1.date }
+    }
+
     private func parseHistory(from result: YahooFinanceResponse.Result) -> [RateDataPoint] {
         guard
             let timestamps = result.timestamp,
@@ -134,6 +168,7 @@ final class ExchangeRateService {
 
     func clearCache() {
         historyCache.removeAll()
+        ohlcCache.removeAll()
     }
 
     func saveRate(_ exchangeRate: ExchangeRate, pair: CurrencyPair = .usdkrw) {
