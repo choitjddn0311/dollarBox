@@ -2,7 +2,29 @@ import SwiftUI
 import Charts
 import WidgetKit
 
-private enum AppTab: String { case chart, converter, journal, pattern, heatmap }
+private enum AppTab: String {
+    case chart, converter, journal, pattern, heatmap
+
+    var label: String {
+        switch self {
+        case .chart:     return "차트"
+        case .converter: return "환산"
+        case .journal:   return "일지"
+        case .pattern:   return "패턴"
+        case .heatmap:   return "시간대"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .chart:     return "chart.xyaxis.line"
+        case .converter: return "arrow.left.arrow.right"
+        case .journal:   return "book"
+        case .pattern:   return "waveform.path.ecg"
+        case .heatmap:   return "clock"
+        }
+    }
+}
 private enum ConverterFocus: Hashable { case usd, krw }
 
 struct ContentView: View {
@@ -338,15 +360,29 @@ struct ContentView: View {
     private var bottomPanel: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Picker("", selection: $activeTab) {
-                    Text("차트").tag(AppTab.chart)
-                    Text("환산").tag(AppTab.converter)
-                    Text("일지").tag(AppTab.journal)
-                    Text("패턴").tag(AppTab.pattern)
-                    Text("시간대").tag(AppTab.heatmap)
+                Menu {
+                    ForEach([AppTab.chart, .converter, .journal, .pattern, .heatmap], id: \.self) { tab in
+                        Button {
+                            activeTab = tab
+                        } label: {
+                            Label(tab.label, systemImage: tab.icon)
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: activeTab.icon)
+                            .font(.system(size: 13, weight: .medium))
+                        Text(activeTab.label)
+                            .font(.subheadline.weight(.semibold))
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
                 }
-                .pickerStyle(.segmented)
-                .frame(width: 400)
+                .buttonStyle(.plain)
+                .glassEffect(in: RoundedRectangle(cornerRadius: 12))
 
                 Spacer()
 
