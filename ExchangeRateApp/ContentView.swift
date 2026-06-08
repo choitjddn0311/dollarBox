@@ -3,12 +3,13 @@ import Charts
 import WidgetKit
 
 private enum AppTab: String {
-    case chart, converter, journal, pattern, heatmap
+    case chart, converter, invest, journal, pattern, heatmap
 
     var label: String {
         switch self {
         case .chart:     return "차트"
         case .converter: return "환산"
+        case .invest:    return "투자"
         case .journal:   return "일지"
         case .pattern:   return "패턴"
         case .heatmap:   return "시간대"
@@ -19,6 +20,7 @@ private enum AppTab: String {
         switch self {
         case .chart:     return "chart.xyaxis.line"
         case .converter: return "arrow.left.arrow.right"
+        case .invest:    return "chart.line.uptrend.xyaxis"
         case .journal:   return "book"
         case .pattern:   return "waveform.path.ecg"
         case .heatmap:   return "clock"
@@ -427,7 +429,7 @@ struct ContentView: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
                 Menu {
-                    ForEach([AppTab.chart, .converter, .journal, .pattern, .heatmap], id: \.self) { tab in
+                    ForEach([AppTab.chart, .converter, .invest, .journal, .pattern, .heatmap], id: \.self) { tab in
                         Button {
                             activeTab = tab
                         } label: {
@@ -490,6 +492,10 @@ struct ContentView: View {
                 }
             } else if activeTab == .converter {
                 converterArea
+            } else if activeTab == .invest {
+                InvestView(exchangeRate: exchangeRate,
+                           yearHistory: yearHistory,
+                           pair: selectedPair)
             } else if activeTab == .journal {
                 JournalView(currentRates: currentRates)
             } else if activeTab == .pattern {

@@ -14,6 +14,7 @@
 		290CE0E20A8A0434212E1F61 /* TradeEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B224ABF8785249B168E66455 /* TradeEntry.swift */; };
 		2D204C44F9CFE4BEB37C82B0 /* RateMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C03745C9804F3458F2EB18B /* RateMonitor.swift */; };
 		32878186D5707171FDC24C45 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 763FDFB57219D5CC23DC7183 /* Config.swift */; };
+		6448A926DF2954CBB8CF9F55 /* InvestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE7E8F2B196EC89D495619CF /* InvestView.swift */; };
 		704588F2088033BA0C46F491 /* ExchangeRateProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = C407D12B0A990821A4498707 /* ExchangeRateProvider.swift */; };
 		7778B6294D23924C4253BD60 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 001E47908E0E4012EE7021F3 /* MenuBarView.swift */; };
 		77C674146FF29311DBC219DA /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDB0E7CC58ACF8A131F51C43 /* ContentView.swift */; };
@@ -81,6 +82,7 @@
 		C407D12B0A990821A4498707 /* ExchangeRateProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExchangeRateProvider.swift; sourceTree = "<group>"; };
 		C97DA2A08CA49E9FAB08A546 /* TradeJournalService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TradeJournalService.swift; sourceTree = "<group>"; };
 		D8A890A1B3AEF2945BB7C699 /* ExchangeRateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExchangeRateService.swift; sourceTree = "<group>"; };
+		DE7E8F2B196EC89D495619CF /* InvestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InvestView.swift; sourceTree = "<group>"; };
 		FAD7879067F2615C5FE0B554 /* ExchangeRateWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ExchangeRateWidgetExtension.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -137,6 +139,7 @@
 				1B1DF8535326933DB7FF85C8 /* ExchangeRateApp.swift */,
 				20CCAF4CD614E72B5F7EEFC0 /* HeatmapView.swift */,
 				578891CC4C97E3210A31B67F /* Info.plist */,
+				DE7E8F2B196EC89D495619CF /* InvestView.swift */,
 				17A633C82856877DD27C3ABD /* JournalView.swift */,
 				001E47908E0E4012EE7021F3 /* MenuBarView.swift */,
 				B181A404097E67706D70543E /* PatternMatchView.swift */,
@@ -247,6 +250,7 @@
 				D85CF44EAEBB03EC82977211 /* ExchangeRateApp.swift in Sources */,
 				B5EE77A29A60495221EDEA6F /* ExchangeRateService.swift in Sources */,
 				0E72C094B2F26DD6CBB071ED /* HeatmapView.swift in Sources */,
+				6448A926DF2954CBB8CF9F55 /* InvestView.swift in Sources */,
 				15EEA196FC927079FDC09B79 /* JournalView.swift in Sources */,
 				7778B6294D23924C4253BD60 /* MenuBarView.swift in Sources */,
 				D3F27F92E2EDB2242A61A9F4 /* PatternMatchView.swift in Sources */,
