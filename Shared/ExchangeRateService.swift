@@ -38,6 +38,7 @@ final class ExchangeRateService {
     private init() {}
 
     private var historyCache: [CurrencyPair: [RatePeriod: (data: [RateDataPoint], fetchedAt: Date)]] = [:]
+    private var hourlyCache: [CurrencyPair: (data: [RateDataPoint], fetchedAt: Date)] = [:]
     private let cacheTTL: TimeInterval = 30 * 60
 
     // MARK: Current Rate
@@ -67,6 +68,7 @@ final class ExchangeRateService {
         case .month:    range = "1mo"; interval = "1d"
         case .year:     range = "1y";  interval = "1d"
         case .fiveYear: range = "5y";  interval = "1wk"
+        case .all:      range = "max"; interval = "1mo"
         }
 
         let result = try await fetchYahoo(ticker: pair.rawValue, range: range, interval: interval)
@@ -74,6 +76,19 @@ final class ExchangeRateService {
 
         if historyCache[pair] == nil { historyCache[pair] = [:] }
         historyCache[pair]?[period] = (data: points, fetchedAt: Date())
+        return points
+    }
+
+    // MARK: Hourly History (Heatmap)
+
+    func fetchHourlyHistory(pair: CurrencyPair = .usdkrw) async throws -> [RateDataPoint] {
+        if let cached = hourlyCache[pair],
+           Date().timeIntervalSince(cached.fetchedAt) < cacheTTL {
+            return cached.data
+        }
+        let result = try await fetchYahoo(ticker: pair.rawValue, range: "3mo", interval: "1h")
+        let points = parseHistory(from: result)
+        hourlyCache[pair] = (data: points, fetchedAt: Date())
         return points
     }
 
@@ -109,7 +124,7 @@ final class ExchangeRateService {
 
         return zip(timestamps, closes)
             .compactMap { ts, close -> RateDataPoint? in
-                guard let close else { return nil }
+                guard let close, close > 0 else { return nil }
                 return RateDataPoint(date: Date(timeIntervalSince1970: ts), rate: close)
             }
             .sorted { $0.date < $1.date }

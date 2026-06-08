@@ -2,7 +2,7 @@ import SwiftUI
 import Charts
 import WidgetKit
 
-private enum AppTab { case chart, converter, journal }
+private enum AppTab: String { case chart, converter, journal, pattern, heatmap }
 private enum ConverterFocus: Hashable { case usd, krw }
 
 struct ContentView: View {
@@ -17,6 +17,12 @@ struct ContentView: View {
     @State private var isLoadingRate = false
     @State private var isLoadingChart = false
     @State private var selectedPoint: RateDataPoint? = nil
+
+    // 패턴 DNA / 히트맵
+    @State private var patternHistory:  [RateDataPoint] = []
+    @State private var hourlyHistory:   [RateDataPoint] = []
+    @State private var isLoadingPattern = false
+    @State private var isLoadingHeatmap = false
 
     // 환산 탭
     @State private var activeTab: AppTab = .chart
@@ -77,6 +83,7 @@ struct ContentView: View {
         case .month:    return .dateTime.day().month(.abbreviated)
         case .year:     return .dateTime.month(.abbreviated)
         case .fiveYear: return .dateTime.year()
+        case .all:      return .dateTime.year()
         }
     }
 
@@ -119,7 +126,7 @@ struct ContentView: View {
 
         let interval   = recent.last!.date.timeIntervalSince(recent.first!.date) / Double(recent.count - 1)
         let lastDate   = recent.last!.date
-        let futureDays = selectedPeriod == .year || selectedPeriod == .fiveYear ? 30 : 7
+        let futureDays = selectedPeriod == .year || selectedPeriod == .fiveYear || selectedPeriod == .all ? 30 : 7
 
         return (0...futureDays).map { i in
             let x = Double(recent.count - 1) + Double(i)
@@ -189,6 +196,13 @@ struct ContentView: View {
         .frame(minWidth: 700, minHeight: 560)
         .preferredColorScheme(preferredScheme)
         .task { await loadAll() }
+        .task(id: "\(activeTab.rawValue)\(selectedPair.rawValue)") {
+            if activeTab == .pattern && patternHistory.isEmpty {
+                await loadPatternHistory()
+            } else if activeTab == .heatmap && hourlyHistory.isEmpty {
+                await loadHourlyHistory()
+            }
+        }
     }
 
     // MARK: - Background
@@ -219,6 +233,8 @@ struct ContentView: View {
                         exchangeRate = nil
                         history = []
                         yearHistory = []
+                        patternHistory = []
+                        hourlyHistory = []
                         selectedPoint = nil
                         baseText = ""
                         krwText = ""
@@ -326,9 +342,11 @@ struct ContentView: View {
                     Text("차트").tag(AppTab.chart)
                     Text("환산").tag(AppTab.converter)
                     Text("일지").tag(AppTab.journal)
+                    Text("패턴").tag(AppTab.pattern)
+                    Text("시간대").tag(AppTab.heatmap)
                 }
                 .pickerStyle(.segmented)
-                .frame(width: 240)
+                .frame(width: 400)
 
                 Spacer()
 
@@ -336,7 +354,7 @@ struct ContentView: View {
                     periodPicker
                 }
 
-                if activeTab != .journal {
+                if activeTab == .chart || activeTab == .converter {
                     Button {
                         showSettings.toggle()
                     } label: {
@@ -370,8 +388,12 @@ struct ContentView: View {
                 }
             } else if activeTab == .converter {
                 converterArea
-            } else {
+            } else if activeTab == .journal {
                 JournalView(currentRates: currentRates)
+            } else if activeTab == .pattern {
+                PatternMatchView(history: patternHistory, isLoading: isLoadingPattern)
+            } else {
+                HeatmapView(hourlyData: hourlyHistory, isLoading: isLoadingHeatmap, pair: selectedPair)
             }
         }
         .padding(.horizontal, 24)
@@ -389,7 +411,7 @@ struct ContentView: View {
             }
         }
         .pickerStyle(.segmented)
-        .frame(maxWidth: 200)
+        .frame(maxWidth: 240)
         .onChange(of: selectedPeriod) { _, _ in
             selectedPoint = nil
             Task { await loadHistory() }
@@ -402,7 +424,7 @@ struct ContentView: View {
         HStack(spacing: 14) {
             legendItem(color: .accentColor, dash: [],      label: "환율")
             if showMA7  { legendItem(color: .orange, dash: [4, 3], label: "MA 7") }
-            if showMA30 && selectedPeriod == .year || selectedPeriod == .fiveYear { legendItem(color: .purple, dash: [4, 3], label: "MA 30") }
+            if showMA30 && (selectedPeriod == .year || selectedPeriod == .fiveYear || selectedPeriod == .all) { legendItem(color: .purple, dash: [4, 3], label: "MA 30") }
             if showBollingerBands && !bbPoints.isEmpty {
                 legendItem(color: Color(red: 0.9, green: 0.7, blue: 0.1), dash: [3, 2], label: "볼린저")
             }
@@ -599,7 +621,7 @@ struct ContentView: View {
                     }
                 }
 
-                if showMA30 && selectedPeriod == .year || selectedPeriod == .fiveYear {
+                if showMA30 && (selectedPeriod == .year || selectedPeriod == .fiveYear || selectedPeriod == .all) {
                     ForEach(ma30) { point in
                         LineMark(
                             x: .value("Date", point.date),
@@ -882,9 +904,29 @@ struct ContentView: View {
         let pair = selectedPair
         do {
             let points = try await ExchangeRateService.shared.fetchHistory(for: selectedPeriod, pair: pair)
-            withAnimation { history = points }
+            withAnimation { history = points.filter { $0.rate > 0 } }
         } catch {
             history = []
+        }
+    }
+
+    private func loadPatternHistory() async {
+        guard patternHistory.isEmpty else { return }
+        isLoadingPattern = true
+        defer { isLoadingPattern = false }
+        let pair = selectedPair
+        if let pts = try? await ExchangeRateService.shared.fetchHistory(for: .fiveYear, pair: pair) {
+            patternHistory = pts.filter { $0.rate > 0 }
+        }
+    }
+
+    private func loadHourlyHistory() async {
+        guard hourlyHistory.isEmpty else { return }
+        isLoadingHeatmap = true
+        defer { isLoadingHeatmap = false }
+        let pair = selectedPair
+        if let pts = try? await ExchangeRateService.shared.fetchHourlyHistory(pair: pair) {
+            hourlyHistory = pts.filter { $0.rate > 0 }
         }
     }
 }

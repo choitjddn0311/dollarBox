@@ -49,6 +49,21 @@ dollarBox는 달러-원 환율을 빠르게 확인하기 위해 만든 macOS 앱
 - 각 기록에 현재 환율 기준 수익률(%) 및 KRW 손익 표시
 - JSON 파일로 로컬 영구 저장 (`~/Application Support/dollarBox/journal.json`)
 
+**패턴 DNA 탭**
+
+- 5년치 일별 데이터에서 현재 14일 차트 모양과 가장 유사한 과거 구간 Top 3 자동 탐지
+- 유사도 점수 및 해당 구간 이후 14일의 실제 등락률 표시
+- 매칭 구간(실선) → 이후 14일 결과(점선) 연결 미니 스파크라인
+- 시나리오 평균 카드 — Top 3 결과 기반 상승/하락 경향 요약
+- 외환 트레이더들이 실제로 사용하는 차트 패턴 매칭 개념을 일별 데이터 기준으로 구현
+
+**환전 시간대 히트맵 탭**
+
+- 최근 3개월 시간당 데이터 기반 요일(월~금) × 시간(8~18시 KST) 히트맵
+- 각 셀 = 전체 평균 대비 환율 편차 (녹색 = 낮음 = 환전에 유리, 빨강 = 높음 = 불리)
+- 통계적으로 환율이 가장 낮은 시간대 자동 탐지 및 강조
+- 어느 앱에도 없는 기능 — 언제 환전하면 유리한지를 데이터로 직접 보여줌
+
 ### macOS 위젯
 
 - Widget Center에서 추가 가능
@@ -94,6 +109,7 @@ https://query1.finance.yahoo.com/v8/finance/chart/USDKRW=X
 - 현재 환율: `range=1d&interval=1m` → `meta.regularMarketPrice`
 - 전일 종가: `meta.chartPreviousClose` → 등락폭 계산에 사용
 - 차트 히스토리: `range=5d|1mo|1y|5y&interval=1d|1wk` → `timestamps + closes`
+- 시간대 히트맵: `range=3mo&interval=1h` → 3개월치 시간별 데이터
 - 캐시 TTL: 30분
 - `updatedAt`: `timestamp` 배열 마지막 값 사용 → 요청 시각이 아닌 실제 마지막 데이터 시각 표시 (주말·공휴일 등 시장 마감 시 정직한 시각 반영)
 
@@ -105,13 +121,15 @@ https://query1.finance.yahoo.com/v8/finance/chart/USDKRW=X
 dollarBox/
 ├── ExchangeRateApp/
 │   ├── ExchangeRateApp.swift         # 앱 진입점
-│   ├── ContentView.swift             # 메인 화면 (차트, 환산, 일지, 지표, 테마)
+│   ├── ContentView.swift             # 메인 화면 (차트, 환산, 일지, 패턴, 시간대, 테마)
 │   ├── MenuBarView.swift             # 메뉴바 팝오버 UI
 │   ├── RateMonitor.swift             # @Observable 환율 상태 관리
 │   ├── SettingsView.swift            # 차트 지표 on/off 설정 화면
 │   ├── JournalView.swift             # 환전 일지 탭 UI
 │   ├── TradeEntry.swift              # 일지 항목 모델
-│   └── TradeJournalService.swift     # 일지 CRUD + JSON 파일 저장
+│   ├── TradeJournalService.swift     # 일지 CRUD + JSON 파일 저장
+│   ├── PatternMatchView.swift        # 패턴 DNA (슬라이딩 윈도우 유클리드 거리 매칭)
+│   └── HeatmapView.swift             # 시간대 히트맵 (요일 × 시간 KST 편차 그리드)
 │
 ├── ExchangeRateWidgetExtension/
 │   ├── ExchangeRateWidget.swift      # 위젯 등록 (Small/Medium/Large)
@@ -174,10 +192,17 @@ ContentView
   │     ├── saveRate()           → UserDefaults
   │     └── loadRate()           → UserDefaults
   │
-  └── 지표 계산 (ContentView 내부, 순수 Swift)
-        ├── movingAverage(period:)   → MA7, MA30
-        ├── bbPoints                 → 볼린저 밴드 (20일, ±2σ)
-        └── rsiPoints                → RSI (14일, Wilder EMA)
+  ├── 지표 계산 (ContentView 내부, 순수 Swift)
+  │     ├── movingAverage(period:)   → MA7, MA30
+  │     ├── bbPoints                 → 볼린저 밴드 (20일, ±2σ)
+  │     ├── rsiPoints                → RSI (14일, Wilder EMA)
+  │     └── predictionPoints         → 선형 회귀 예측선
+  │
+  ├── PatternMatcher (PatternMatchView 내부, 순수 Swift)
+  │     └── findMatches()   → 5Y 데이터 슬라이딩 윈도우 → 유클리드 거리 → Top 3
+  │
+  └── HeatmapData (HeatmapView 내부, 순수 Swift)
+        └── init([RateDataPoint])   → KST 변환 → 요일×시간 그룹핑 → 편차 계산
 
 ExchangeRateProvider (Widget)
   └── getTimeline()
@@ -222,6 +247,27 @@ rsi  = 100 - (100 / (1 + avgG / avgL))
 `chartOverlay` + `DragGesture(minimumDistance: 0)` + `ChartProxy.value(atX:)` 조합으로  
 드래그 위치에 가장 가까운 데이터 포인트를 실시간으로 하이라이트.  
 RSI 서브차트도 메인 차트의 `selectedPoint`를 공유해 연동.
+
+**차트 지표와 실제 트레이딩**
+
+MA, 볼린저 밴드, RSI 등 앱에 구현된 기술 지표들은 외환 트레이더들이 실제로 사용하는 것들과 동일한 개념입니다.  
+다만 트레이더들은 1분봉·5분봉 단위로 보는 반면, dollarBox는 일봉 기준입니다.  
+"지금 달러 살까 말까"를 결정하는 일반 사용자 관점에서는 일봉 기준이 오히려 노이즈가 적고 적합합니다.
+
+**패턴 DNA 알고리즘**
+
+최근 14일 환율을 % 수익률로 정규화한 뒤, 5년치 데이터 전체를 같은 길이의 윈도우로 슬라이딩하며 유클리드 거리를 계산합니다.  
+겹치는 윈도우를 제거한 뒤 Top 3 유사 구간을 추출하고, 각 구간 이후 14일의 실제 등락률을 보여줍니다.
+
+```
+거리 d = √Σ(current_return[i] - historical_return[i])²
+유사도 = max(55, 100 - d × 10)  // 55~99% 범위
+```
+
+**시간대 히트맵 계산**
+
+Yahoo Finance 1h 데이터의 UTC 타임스탬프를 KST(UTC+9)로 변환 후, 요일·시간 단위로 그룹핑합니다.  
+각 셀의 색상은 전체 평균 대비 편차를 ±0.3% 기준으로 정규화해 녹색(낮음)/빨강(높음)으로 표현합니다.
 
 **테마 모드**
 
