@@ -215,3 +215,26 @@ When the widget is added to macOS Widget Center, it should display:
 Updated 14:25
 
 and automatically refresh throughout the day.
+
+---
+
+## 향후 주식 기능 추가 시 리팩토링 계획
+
+현재 차트/지표 코드는 환율 전용으로 ContentView에 통합되어 있음.
+주식 API를 붙일 때 아래 작업이 필요하다는 걸 기억할 것.
+
+### 지금 재사용 가능한 것 (건드리지 말 것)
+- `RateDataPoint` — date + rate 구조, 주식에도 그대로 사용 가능
+- `PatternMatchView` — `[RateDataPoint]` 입력, 범용
+- `HeatmapView` — `[RateDataPoint]` 입력, 범용
+- MA / BB / RSI / 예측선 계산 수학 — 공식 자체는 종목 무관
+
+### 주식 추가 시 리팩토링해야 할 것
+1. **차트 UI 분리** — ContentView에 박힌 차트를 독립 `ChartView` 컴포넌트로 추출
+2. **서비스 레이어 프로토콜화** — `ExchangeRateService`를 `PriceDataService` 프로토콜로 추상화, FX/주식 각각 구현
+3. **InvestView KRW 의존성 제거** — `CurrencyPair` 대신 범용 `Asset` 타입으로 교체
+4. **`ExchangeRate` 모델 분리** — FX 전용 필드(previousClose, changePercent)를 범용 모델과 분리
+
+### 판단 근거
+기능 추가가 계속되는 지금 단계에서 추상화하면 복잡도만 높아짐.
+주식 기능을 실제로 붙이기 직전에 이 섹션을 보고 리팩토링 후 진행할 것.
