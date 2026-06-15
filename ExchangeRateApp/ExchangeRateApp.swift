@@ -4,6 +4,10 @@ import SwiftUI
 struct ExchangeRateApp: App {
     @State private var rateMonitor = RateMonitor()
 
+    init() {
+        AlertManager.requestPermission()
+    }
+
     var body: some Scene {
         WindowGroup(id: "main") {
             ContentView()

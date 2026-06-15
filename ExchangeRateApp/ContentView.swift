@@ -3,7 +3,7 @@ import Charts
 import WidgetKit
 
 private enum AppTab: String {
-    case chart, converter, invest, journal, pattern, heatmap
+    case chart, converter, invest, journal, pattern, heatmap, alerts
 
     var label: String {
         switch self {
@@ -13,6 +13,7 @@ private enum AppTab: String {
         case .journal:   return "일지"
         case .pattern:   return "패턴"
         case .heatmap:   return "시간대"
+        case .alerts:    return "알림"
         }
     }
 
@@ -24,6 +25,7 @@ private enum AppTab: String {
         case .journal:   return "book"
         case .pattern:   return "waveform.path.ecg"
         case .heatmap:   return "clock"
+        case .alerts:    return "bell"
         }
     }
 }
@@ -478,7 +480,7 @@ struct ContentView: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
                 Menu {
-                    ForEach([AppTab.chart, .converter, .invest, .journal, .pattern, .heatmap], id: \.self) { tab in
+                    ForEach([AppTab.chart, .converter, .invest, .journal, .pattern, .heatmap, .alerts], id: \.self) { tab in
                         Button {
                             activeTab = tab
                         } label: {
@@ -554,8 +556,10 @@ struct ContentView: View {
                 JournalView(currentRates: currentRates)
             } else if activeTab == .pattern {
                 PatternMatchView(history: patternHistory, isLoading: isLoadingPattern)
-            } else {
+            } else if activeTab == .heatmap {
                 HeatmapView(hourlyData: hourlyHistory, isLoading: isLoadingHeatmap, pair: selectedPair)
+            } else {
+                AlertsView(currentRates: currentRates)
             }
         }
         .padding(.horizontal, 24)
@@ -1191,6 +1195,7 @@ struct ContentView: View {
             withAnimation { exchangeRate = rate }
             WidgetCenter.shared.reloadAllTimelines()
             rateMonitor.update(rate: rate.rate, pair: pair, changePercent: rate.changePercent)
+            AlertManager.shared.check(rate: rate.rate, for: pair)
         } catch {
             exchangeRate = ExchangeRateService.shared.loadRate(pair: pair)
         }

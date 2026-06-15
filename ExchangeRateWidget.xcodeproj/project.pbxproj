@@ -10,6 +10,7 @@
 		0E72C094B2F26DD6CBB071ED /* HeatmapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20CCAF4CD614E72B5F7EEFC0 /* HeatmapView.swift */; };
 		1515D17A43B6862CA1A4CC15 /* ExchangeRate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 368FB9B4DF36F371E5364E40 /* ExchangeRate.swift */; };
 		15EEA196FC927079FDC09B79 /* JournalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17A633C82856877DD27C3ABD /* JournalView.swift */; };
+		19C11EA147F7A7E48A86772A /* AlertManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60A478957DE08ED41D3DDF41 /* AlertManager.swift */; };
 		22ABF8E97A799154DDAC46B8 /* ExchangeRate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 368FB9B4DF36F371E5364E40 /* ExchangeRate.swift */; };
 		290CE0E20A8A0434212E1F61 /* TradeEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B224ABF8785249B168E66455 /* TradeEntry.swift */; };
 		2D204C44F9CFE4BEB37C82B0 /* RateMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C03745C9804F3458F2EB18B /* RateMonitor.swift */; };
@@ -18,6 +19,7 @@
 		704588F2088033BA0C46F491 /* ExchangeRateProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = C407D12B0A990821A4498707 /* ExchangeRateProvider.swift */; };
 		7778B6294D23924C4253BD60 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 001E47908E0E4012EE7021F3 /* MenuBarView.swift */; };
 		77C674146FF29311DBC219DA /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDB0E7CC58ACF8A131F51C43 /* ContentView.swift */; };
+		8A738F5CF91FCED204905183 /* AlertsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 327EC940F058E53B7AAADFE5 /* AlertsView.swift */; };
 		9410533B003802D5883C55A5 /* RateDataPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABE3456B77F3197BF4C74A21 /* RateDataPoint.swift */; };
 		9A0C21C425366C75E395D8F0 /* ExchangeRateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8A890A1B3AEF2945BB7C699 /* ExchangeRateService.swift */; };
 		9C54231885AAB4599FC361F0 /* ExchangeRateWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 851B2D3FF9414E171F45820A /* ExchangeRateWidget.swift */; };
@@ -63,12 +65,14 @@
 		17A633C82856877DD27C3ABD /* JournalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalView.swift; sourceTree = "<group>"; };
 		1B1DF8535326933DB7FF85C8 /* ExchangeRateApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExchangeRateApp.swift; sourceTree = "<group>"; };
 		20CCAF4CD614E72B5F7EEFC0 /* HeatmapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeatmapView.swift; sourceTree = "<group>"; };
+		327EC940F058E53B7AAADFE5 /* AlertsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertsView.swift; sourceTree = "<group>"; };
 		368FB9B4DF36F371E5364E40 /* ExchangeRate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExchangeRate.swift; sourceTree = "<group>"; };
 		3ED3E01CED085B38F66E964D /* ExchangeRateApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ExchangeRateApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4C03745C9804F3458F2EB18B /* RateMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RateMonitor.swift; sourceTree = "<group>"; };
 		4EB9E00CE835FD9B36853B2D /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		56504E5B8B97FCBEFB32E1BD /* .env */ = {isa = PBXFileReference; path = .env; sourceTree = "<group>"; };
 		578891CC4C97E3210A31B67F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		60A478957DE08ED41D3DDF41 /* AlertManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertManager.swift; sourceTree = "<group>"; };
 		6DE4061FAAB4C8B91CEB900C /* ExchangeRateWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ExchangeRateWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		763FDFB57219D5CC23DC7183 /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
 		79F1582A213FA79D3C1C17B7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -133,6 +137,8 @@
 		BFE180E0901CD6340D074372 /* ExchangeRateApp */ = {
 			isa = PBXGroup;
 			children = (
+				60A478957DE08ED41D3DDF41 /* AlertManager.swift */,
+				327EC940F058E53B7AAADFE5 /* AlertsView.swift */,
 				0248A5E5E0979EEF53871C85 /* Assets.xcassets */,
 				BDB0E7CC58ACF8A131F51C43 /* ContentView.swift */,
 				7F03BEF27119A5E3D27416EB /* ExchangeRateApp.entitlements */,
@@ -244,6 +250,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				19C11EA147F7A7E48A86772A /* AlertManager.swift in Sources */,
+				8A738F5CF91FCED204905183 /* AlertsView.swift in Sources */,
 				E2B0263AF206A6D6A6BEBBB4 /* Config.swift in Sources */,
 				77C674146FF29311DBC219DA /* ContentView.swift in Sources */,
 				22ABF8E97A799154DDAC46B8 /* ExchangeRate.swift in Sources */,

@@ -25,5 +25,6 @@ final class RateMonitor {
     func refresh() async {
         guard let rate = try? await ExchangeRateService.shared.fetchLatestRate(pair: .usdkrw) else { return }
         update(rate: rate.rate, pair: .usdkrw, changePercent: rate.changePercent)
+        AlertManager.shared.check(rate: rate.rate, for: .usdkrw)
     }
 }
